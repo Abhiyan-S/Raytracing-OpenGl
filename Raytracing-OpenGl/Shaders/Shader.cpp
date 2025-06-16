@@ -22,6 +22,9 @@ Shader::Shader(const char* vertexFilePath, const char* fragmentFilePath) {
 	const char* vCode_c = vertexShaderCode.c_str();
 	const char* fCode_c = fragmentShaderCode.c_str();
 
+	int success;
+	char logInfo[512];
+
 	unsigned int vs = glCreateShader(GL_VERTEX_SHADER);
 	glShaderSource(vs, 1, &vCode_c, NULL);
 	glCompileShader(vs);
@@ -29,6 +32,12 @@ Shader::Shader(const char* vertexFilePath, const char* fragmentFilePath) {
 	unsigned int fs = glCreateShader(GL_FRAGMENT_SHADER);
 	glShaderSource(fs, 1, &fCode_c, NULL);
 	glCompileShader(fs);
+
+	glGetShaderiv(fs, GL_COMPILE_STATUS, &success);
+	if (!success) {
+		glGetShaderInfoLog(fs, 512, NULL, logInfo);
+		std::cout << "Error compiling fragment shader \n" << logInfo << std::endl;
+	}
 
 	ID = glCreateProgram();
 	glAttachShader(ID, vs); glAttachShader(ID, fs);

@@ -28,6 +28,8 @@ void CreateScreenQuad(GLuint *vao, GLuint *vbo) {
 
 
 void SendSpheresToGPU(GLuint *ssbo,const std::vector<Sphere> &spheres) {
+
+	//TODO: split this function into initiliaztion and function to send it to gpu
 	std::vector<GPUSphere> gpuSpheres;
 	for (int i = 0; i < spheres.size(); i++) {
 		gpuSpheres.push_back(GPUSphere(spheres[i].position, spheres[i].radius));
@@ -62,10 +64,11 @@ int main(int argc, char* argv[]) {
 
 	Camera camera(glm::vec3(0, 0, 0), glm::vec3(0, 0, 1), 60, 5, width / (float)height);
 
+	//TODO: Wrap the camera initialization and updating into two functions
 	GLuint ubo_cam;
 	glGenBuffers(1, &ubo_cam);
 	glBindBuffer(GL_UNIFORM_BUFFER, ubo_cam);
-	glBufferData(GL_UNIFORM_BUFFER, sizeof(GPUCamera), nullptr, GL_DYNAMIC_DRAW);
+	glBufferData(GL_UNIFORM_BUFFER, sizeof(GPUCamera), NULL, GL_STATIC_DRAW);
 	glBindBufferBase(GL_UNIFORM_BUFFER, 1, ubo_cam);
 
 	GLuint blockIndex = glGetUniformBlockIndex(shader.ID, "Camera");
@@ -83,17 +86,16 @@ int main(int argc, char* argv[]) {
 	camData.screenHeight = camera.screenHeight;
 
 	glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(GPUCamera), &camData);
-	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
 	std::vector<Sphere> spheres = { 
-									Sphere(glm::vec3(-0.5,0,1), 0.1f),
-									Sphere(glm::vec3(0,0.5,1), 0.2f),
-									Sphere(glm::vec3(0.5,0,1), 0.1f)
+									Sphere(glm::vec3(-0.5,0,2), 0.1f),
+									Sphere(glm::vec3(0,0.5,2), 0.2f),
+									Sphere(glm::vec3(0.5,0,2), 0.1f)
 								  };
 	GLuint ssbo_spheres;
 	SendSpheresToGPU(&ssbo_spheres, spheres);
 
-	//DO NOT USE SENDSPHERES AND SENDCAMERA FUNCTIONS IN THE LOOP
+	//!!!DO NOT USE SENDSPHERES FUNCTIONS IN THE LOOP
 	while (running) {
 		while (SDL_PollEvent(&event)) {
 			if (event.type == SDL_QUIT) running = false;

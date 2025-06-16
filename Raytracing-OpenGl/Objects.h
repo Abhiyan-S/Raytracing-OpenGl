@@ -32,13 +32,13 @@ struct GPUSphere {
 };
 
 struct GPUCamera {
-	glm::vec3 pos;
-	float pad1;
-	glm::vec3 dir;
-	float pad2;
-	float fov;
-	float focalLength;
-	float aspectRatio;
-	float screenWidth;
-	float screenHeight;
+	glm::vec3 pos; //12
+	float pad1; //16
+	glm::vec3 dir; //28
+	float pad2;// 32
+	float fov;//36
+	float focalLength;//40
+	float aspectRatio;//44
+	float screenWidth;//48
+	float screenHeight;//52
 };
