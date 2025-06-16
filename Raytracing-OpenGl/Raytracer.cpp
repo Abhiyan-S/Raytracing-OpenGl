@@ -5,6 +5,7 @@
 #include "Objects.h"
 #include<vector>
 #include<iostream>
+#include<chrono>
 bool running = true;
 
 void CreateScreenQuad(GLuint *vao, GLuint *vbo) {
@@ -26,18 +27,38 @@ void CreateScreenQuad(GLuint *vao, GLuint *vbo) {
 	glEnableVertexAttribArray(0);
 }
 
-
 void SendSpheresToGPU(GLuint *ssbo,const std::vector<Sphere> &spheres) {
 
 	//TODO: split this function into initiliaztion and function to send it to gpu
 	std::vector<GPUSphere> gpuSpheres;
 	for (int i = 0; i < spheres.size(); i++) {
-		gpuSpheres.push_back(GPUSphere(spheres[i].position, spheres[i].radius));
+		gpuSpheres.push_back(GPUSphere(spheres[i].position, spheres[i].radius, spheres[i].material));
+		
 	}
 	glGenBuffers(1, ssbo);
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, *ssbo);
-	glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(GPUSphere) * gpuSpheres.size(),gpuSpheres.data(), GL_DYNAMIC_DRAW);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(GPUSphere) * gpuSpheres.size(),gpuSpheres.data(), GL_STATIC_DRAW);
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, *ssbo);
+}
+
+void UpdateCamera(GLuint* ubo_cam, const Camera *camera) {
+	glBindBuffer(GL_UNIFORM_BUFFER, *ubo_cam);
+	GPUCamera camData;
+	camData.pos = camera->position;
+	camData.pad1 = 0;
+	camData.dir = camera->dir;
+	camData.pad2 = 0;
+	camData.up = camera->up;
+	camData.pad3 = 0;
+	camData.right = camera->right;
+	camData.pad4 = 0;
+	camData.fov = camera->horizontalFOV;
+	camData.focalLength = camera->focalLength;
+	camData.aspectRatio = camera->aspectRatio;
+	camData.screenWidth = camera->screenWidth;
+	camData.screenHeight = camera->screenHeight;
+
+	glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(GPUCamera), &camData);
 }
 
 int main(int argc, char* argv[]) {
@@ -79,6 +100,10 @@ int main(int argc, char* argv[]) {
 	camData.pad1 = 0; 
 	camData.dir = camera.dir;
 	camData.pad2 = 0;
+	camData.up = camera.up;
+	camData.pad3 = 0;
+	camData.right = camera.right;
+	camData.pad4 = 0;
 	camData.fov = camera.horizontalFOV;
 	camData.focalLength = camera.focalLength;
 	camData.aspectRatio = camera.aspectRatio;
@@ -88,18 +113,39 @@ int main(int argc, char* argv[]) {
 	glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(GPUCamera), &camData);
 
 	std::vector<Sphere> spheres = { 
-									Sphere(glm::vec3(-0.5,0,2), 0.1f),
-									Sphere(glm::vec3(0,0.5,2), 0.2f),
+									Sphere(glm::vec3(-0.1,0,2), 0.1f),
+									Sphere(glm::vec3(0,0,10), 0.2f),
 									Sphere(glm::vec3(0.5,0,2), 0.1f)
 								  };
+
+	spheres[0].material.color = glm::vec3(1, 1, 0);
+	spheres[1].material.color = glm::vec3(1, 0, 1);
+	spheres[2].material.color = glm::vec3(0, 1, 1);
 	GLuint ssbo_spheres;
 	SendSpheresToGPU(&ssbo_spheres, spheres);
 
 	//!!!DO NOT USE SENDSPHERES FUNCTIONS IN THE LOOP
+	float time = 0;
+	long double dt = 0;
+
+	float fpsTimer = 0;
+
+	const Uint8* keystate = SDL_GetKeyboardState(NULL);
+
+	float speed = 1;
 	while (running) {
+		auto start = std::chrono::high_resolution_clock::now();
 		while (SDL_PollEvent(&event)) {
 			if (event.type == SDL_QUIT) running = false;
 		}
+		if (keystate[SDL_SCANCODE_W]) camera.position += camera.dir * speed * (float)dt;
+		if (keystate[SDL_SCANCODE_S]) camera.position -= camera.dir * speed * (float)dt;
+		if (keystate[SDL_SCANCODE_A]) camera.position -= camera.right * speed * (float)dt;
+		if (keystate[SDL_SCANCODE_D]) camera.position += camera.right * speed * (float)dt;
+		if (keystate[SDL_SCANCODE_Q]) camera.position -= camera.up * speed * (float)dt;
+		if (keystate[SDL_SCANCODE_E]) camera.position += camera.up * speed * (float)dt;
+
+		UpdateCamera(&ubo_cam, &camera);
 		glClearColor(0, 0, 0, 1);
 		glClear(GL_COLOR_BUFFER_BIT);
 
@@ -110,6 +156,13 @@ int main(int argc, char* argv[]) {
 
 		
 		SDL_GL_SwapWindow(window);
+		auto end = std::chrono::high_resolution_clock::now();
+		dt = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count()/1000000.0;
+		time += dt;
+		if (time - fpsTimer > 3) {
+			fpsTimer = time;
+			std::cout << "FPS: " << 1 / dt << "\n";
+		}
 	}
 	SDL_DestroyWindow(window);
 	SDL_GL_DeleteContext(context);

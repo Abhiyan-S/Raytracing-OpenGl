@@ -3,12 +3,25 @@
 out vec4 FragColor;
 uniform vec2 resolution;
 
+struct Material{
+	vec3 color;
+	float roughness;
+};
+
 struct Sphere{
 	vec3 position;
 	float radius;
+	Material material;
 };
 
-layout(std430, binding = 0) buffer Spheres{
+struct Light{
+	vec3 position;
+	float pad1;
+	vec3 color;
+	float intensity;
+}
+
+layout(std430, binding = 1) buffer Spheres{
 	Sphere spheres[];
 };
 
@@ -17,6 +30,10 @@ layout(std140, binding = 1) uniform Camera{
 	float pad1;
 	vec3 dir;
 	float pad2;
+	vec3 up;
+	float pad3;
+	vec3 right;
+	float pad4;
 	float horizontalFOV;
 	float focalLength;
 	float aspectRatio;
@@ -39,17 +56,24 @@ HitInfo TraceSphere(Ray ray, int sIdx){
 	float discriminant = b * b - 4 * c;
 
 	HitInfo hit;
-	hit.distance = 1000000;
+	hit.distance = 1.0/0/0;
 	hit.didHit = false;
 	if(discriminant >= 0){
-		hit.didHit = true;
-		float dst1 = (-b + sqrt(discriminant))/2;
-		float dst2 = (-b - sqrt(discriminant))/2;
+		
+		float s = sqrt(discriminant);
+		float dst1 = (-b + s)/2;
+		float dst2 = (-b - s)/2;
 
 		if(dst1*dst2 < 0){
 			hit.distance = max(dst1, dst2);
+			hit.didHit = true;
+		}
+		else if(dst1 < 0 && dst2 < 0){
+			hit.didHit = false;
+			hit.distance = min(dst1, dst2);
 		}
 		else{
+			hit.didHit = true;
 			hit.distance = min(dst1, dst2);
 		}
 	}
@@ -57,8 +81,12 @@ HitInfo TraceSphere(Ray ray, int sIdx){
 	return hit;
 }
 
+float GetLightIntensity(vec3 point){
+
+}
+
 void main(){
-	vec3 currentColor = vec3(0,0,0);
+	vec3 currentColor = vec3(0.529, 0.808, 0.922);
 	float x = (((gl_FragCoord.x - 0.5)/resolution.x) - 0.5) * 2;
 	float y = (((gl_FragCoord.y - 0.5)/resolution.y) - 0.5) * 2;
 
@@ -66,20 +94,23 @@ void main(){
 	ray.origin = cam.position;
 	vec3 test = cam.position;
 
-	vec3 camRight = cross(cam.dir, vec3(0,1,0));
-	vec3 camUp = cross(cam.dir, camRight);
 
-	vec3 pointInScreen = (cam.position + (cam.dir * cam.focalLength)) + (camRight * (x * (cam.screenWidth/2))) + (camUp * (y * (cam.screenHeight/2)));
+	vec3 pointInScreen = (cam.position + (cam.dir * cam.focalLength)) + (cam.right * (x * (cam.screenWidth/2))) + (cam.up * (y * (cam.screenHeight/2)));
 
 	ray.dir = normalize(pointInScreen - cam.position);
+
+	HitInfo closestHitInfo;
+	closestHitInfo.didHit = false;
+	closestHitInfo.distance = 1.0/0.0;
+
 	for(int i = 0; i < spheres.length(); i++){
 		HitInfo hit = TraceSphere(ray, i);
 		if(hit.didHit){
-			currentColor = vec3(1,1,0);
-			break;
-		}
-		else{
-			currentColor = vec3(0,0,0);
+			if(hit.distance < closestHitInfo.distance){
+				closestHitInfo.didHit = true;
+				currentColor = spheres[i].material.color;
+				closestHitInfo.distance = hit.distance;
+			}
 		}
 	}
 	FragColor = vec4(currentColor, 1);
