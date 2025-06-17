@@ -25,6 +25,10 @@ public:
 	}
 };
 
+class Scene {
+
+};
+
 class Material {
 public:
 	glm::vec3 color;
@@ -41,7 +45,22 @@ public:
 	Sphere(glm::vec3 pos, float r) : position(pos), radius(r) {};
 };
 
+class Light {
+public:
+	glm::vec3 position;
+	glm::vec3 color;
+	float intensity;
+	Light(glm::vec3 position, glm::vec3 color, float intensity) : position(position), color(color), intensity(intensity) {};
+};
 
+//MAKE SURE TO CHANGE THE STRUCTURES IN THE FRAGMENT SHADERS IF YOU ARE CHANGING THE STRUCTS BELOW
+struct GPULight {
+	glm::vec3 pos;
+	float pad1;
+	glm::vec3 col;
+	float intensity;
+	GPULight(glm::vec3 pos, glm::vec3 col, float intensity) : pos(pos), col(col), intensity(intensity) {};
+};
 
 struct GPUSphere {
 	glm::vec3 pos;

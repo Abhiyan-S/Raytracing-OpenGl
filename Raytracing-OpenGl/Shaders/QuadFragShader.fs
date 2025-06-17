@@ -19,13 +19,17 @@ struct Light{
 	float pad1;
 	vec3 color;
 	float intensity;
-}
+};
 
-layout(std430, binding = 1) buffer Spheres{
+layout(std430, binding = 2) buffer Spheres{
 	Sphere spheres[];
 };
 
-layout(std140, binding = 1) uniform Camera{
+layout(std430, binding = 1) buffer Lights{
+	Light lights[];
+};
+
+layout(std140, binding = 0) uniform Camera{
 	vec3 position;
 	float pad1;
 	vec3 dir;
@@ -48,7 +52,12 @@ struct Ray{
 struct HitInfo{
 	bool didHit;
 	float distance;
+	vec3 normal;
+	vec3 point;
 };
+
+
+
 HitInfo TraceSphere(Ray ray, int sIdx){
 	vec3 offset = ray.origin - spheres[sIdx].position;
 	float b = 2 * dot(offset, ray.dir);
@@ -56,7 +65,7 @@ HitInfo TraceSphere(Ray ray, int sIdx){
 	float discriminant = b * b - 4 * c;
 
 	HitInfo hit;
-	hit.distance = 1.0/0/0;
+	hit.distance = 1.0/0.0;
 	hit.didHit = false;
 	if(discriminant >= 0){
 		
@@ -66,23 +75,46 @@ HitInfo TraceSphere(Ray ray, int sIdx){
 
 		if(dst1*dst2 < 0){
 			hit.distance = max(dst1, dst2);
+			hit.point = ray.origin + ray.dir * hit.distance;
+			hit.normal = normalize(hit.point - spheres[sIdx].position);
 			hit.didHit = true;
 		}
 		else if(dst1 < 0 && dst2 < 0){
 			hit.didHit = false;
-			hit.distance = min(dst1, dst2);
 		}
 		else{
 			hit.didHit = true;
 			hit.distance = min(dst1, dst2);
+			hit.point = ray.origin + ray.dir * hit.distance;
+			hit.normal = normalize(hit.point - spheres[sIdx].position);
 		}
 	}
 
 	return hit;
 }
-
-float GetLightIntensity(vec3 point){
-
+vec3 GetLight(vec3 point, vec3 normal){
+	vec3 currentColor = vec3(0.1,0.16,0.18);
+	Ray ray;
+	ray.origin = point;
+	for(int l = 0; l<lights.length(); l++){
+		ray.dir = normalize(lights[l].position - point);
+		float d = length(lights[l].position - point);
+		bool blocked = false;
+		HitInfo hit;
+		for(int i = 0; i<spheres.length(); i++){
+			hit = TraceSphere(ray, i);
+			if(hit.didHit){
+				if(hit.distance < d){
+					blocked = true;
+					break;
+				}
+			}
+		}
+		if(!blocked){
+			currentColor += (lights[l].color * lights[l].intensity * max(dot(normal, ray.dir), 0.0));
+		}
+	}
+	return currentColor;
 }
 
 void main(){
@@ -107,9 +139,8 @@ void main(){
 		HitInfo hit = TraceSphere(ray, i);
 		if(hit.didHit){
 			if(hit.distance < closestHitInfo.distance){
-				closestHitInfo.didHit = true;
-				currentColor = spheres[i].material.color;
-				closestHitInfo.distance = hit.distance;
+				closestHitInfo = hit;
+				currentColor = spheres[i].material.color * GetLight(hit.point + hit.normal * 0.0001, hit.normal);
 			}
 		}
 	}
