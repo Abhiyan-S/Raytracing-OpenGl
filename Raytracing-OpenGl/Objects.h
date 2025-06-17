@@ -1,6 +1,7 @@
 #pragma once
 #include<glm/glm.hpp>
-
+#include<vector>
+#include "Shaders/Shader.h"
 class Camera {
 public:
 	glm::vec3 position;
@@ -11,23 +12,10 @@ public:
 
 	float screenWidth, screenHeight;
 
-	Camera(glm::vec3 position, glm::vec3 dir, float horizontalFOV, float focalLength, float aspectRatio) { // FOV in degrees
-		dir = glm::normalize(dir);
-		horizontalFOV = glm::radians(horizontalFOV);
-
-		right = -glm::cross(dir, glm::vec3(0, 1, 0));// without - sign, the axes are flipped
-		up = glm::cross(dir, right);
-
-		this->position = position; this->dir = dir; this->horizontalFOV = horizontalFOV; this->focalLength = focalLength; this->aspectRatio = aspectRatio;
-
-		screenWidth = 2 * focalLength * glm::tan(horizontalFOV / 2);
-		screenHeight = screenWidth / aspectRatio;
-	}
+	Camera(glm::vec3 position, glm::vec3 dir, float horizontalFOV, float focalLength, float aspectRatio);
 };
 
-class Scene {
 
-};
 
 class Material {
 public:
@@ -83,4 +71,22 @@ struct GPUCamera {
 	float aspectRatio;//44
 	float screenWidth;//48
 	float screenHeight;//52
+};
+
+class Scene {
+public:
+	Shader shader;
+	GLuint ubo_cam;
+	GLuint ssbo_lights;
+	GLuint ssbo_spheres;
+
+	Scene(Shader shader);
+	void InitScene();
+	void InitCamera();
+	void InitLights();
+	void InitSpheres();
+
+	void UpdateSpheres(const std::vector<Sphere> &spheres);
+	void UpdateCamera(Camera &camera);
+	void UpdateLights(const std::vector<Light>& lights);
 };

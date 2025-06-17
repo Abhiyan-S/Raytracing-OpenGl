@@ -134,6 +134,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="glad\src\glad.c" />
+    <ClCompile Include="Objects.cpp" />
     <ClCompile Include="Raytracer.cpp" />
     <ClCompile Include="Shaders\Shader.cpp" />
   </ItemGroup>
