@@ -1,6 +1,7 @@
 #include<glad/glad.h>
 #include "Objects.h"
 #include "Shaders/Shader.h"
+#include<glm/gtc/matrix_transform.hpp>
 #define CAMERA_BINDING 0
 #define LIGHTS_BINDING 1
 #define SPHERES_BINDING 2
@@ -54,6 +55,8 @@ Scene::Scene(Shader shader) : shader(shader) {
 
 
 void Scene::UpdateCamera(Camera &camera) {
+	camera.right = -glm::cross(camera.dir, glm::vec3(0, 1, 0));// without - sign, the axes are flipped
+	camera.up = glm::cross(camera.dir, camera.right);
 	glBindBuffer(1, ubo_cam);
 	GPUCamera camData;
 	camData.pos = camera.position;

@@ -51,7 +51,7 @@ int main(int argc, char* argv[]) {
 	Shader shader("Shaders/QuadVertexShader.vs", "Shaders/QuadFragShader.fs");
 	int resLoc = glGetUniformLocation(shader.ID, "resolution");
 
-	Camera camera(glm::vec3(0, 0, 0), glm::vec3(0, 0, 1), 60, 10, width / (float)height);
+	Camera camera(glm::vec3(0, 0, 0), glm::vec3(0, 0, 1), 60, 5, width / (float)height);
 
 	Scene scene(shader);
 	scene.UpdateCamera(camera);
@@ -64,28 +64,39 @@ int main(int argc, char* argv[]) {
 
 	spheres[0].material.color = glm::vec3(1, 1, 0);
 	spheres[1].material.color = glm::vec3(1, 0, 1);
-	spheres[2].material.color = glm::vec3(0, 1, 1);
+	spheres[2].material.color = glm::vec3(1, 1, 1);
 
 	GLuint ssbo_lights;
 	std::vector<Light> lights = {
-									Light(glm::vec3(0,5,5), glm::vec3(1,1,1), 1)
+									Light(glm::vec3(0,5,5), glm::vec3(1,0,0), 1)
 								   };
 
 	scene.UpdateSpheres(spheres);
 	scene.UpdateLights(lights);
 
 	float time = 0;
-	long double dt = 0;
+	float dt = 0;
 
 	float fpsTimer = 0;
 
 	const Uint8* keystate = SDL_GetKeyboardState(NULL);
+	SDL_SetRelativeMouseMode(SDL_TRUE);
 
 	float speed = 5;
+	float sensitivity = 0.0005;
 	while (running) {
 		auto start = std::chrono::high_resolution_clock::now();
 		while (SDL_PollEvent(&event)) {
 			if (event.type == SDL_QUIT) running = false;
+			if (event.type == SDL_KEYDOWN) {
+				if (event.key.keysym.sym == SDLK_ESCAPE) running = false;
+			}
+			if (event.type == SDL_MOUSEMOTION) {
+				float dx = event.motion.xrel;
+				float dy = event.motion.yrel;
+
+				camera.dir = glm::normalize(camera.dir + camera.right * dx * sensitivity - camera.up * dy * sensitivity);
+			}
 		}
 		if (keystate[SDL_SCANCODE_W]) camera.position += camera.dir * speed * (float)dt;
 		if (keystate[SDL_SCANCODE_S]) camera.position -= camera.dir * speed * (float)dt;
@@ -93,7 +104,7 @@ int main(int argc, char* argv[]) {
 		if (keystate[SDL_SCANCODE_D]) camera.position += camera.right * speed * (float)dt;
 		if (keystate[SDL_SCANCODE_Q]) camera.position -= camera.up * speed * (float)dt;
 		if (keystate[SDL_SCANCODE_E]) camera.position += camera.up * speed * (float)dt;
-
+		
 		scene.UpdateCamera(camera);
 		glClearColor(0, 0, 0, 1);
 		glClear(GL_COLOR_BUFFER_BIT);

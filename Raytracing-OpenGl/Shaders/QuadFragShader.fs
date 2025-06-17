@@ -117,6 +117,13 @@ vec3 GetLight(vec3 point, vec3 normal){
 	return currentColor;
 }
 
+float Random(int seed) {
+	vec2 co = gl_FragCoord.xy;
+    return fract(sin(dot(co.xy ,vec2(12.9898,78.233)) + seed) * 43758.5453);
+}
+
+#define BOUNCES = 1
+
 void main(){
 	vec3 currentColor = vec3(0.529, 0.808, 0.922);
 	float x = (((gl_FragCoord.x - 0.5)/resolution.x) - 0.5) * 2;
@@ -135,6 +142,7 @@ void main(){
 	closestHitInfo.didHit = false;
 	closestHitInfo.distance = 1.0/0.0;
 
+
 	for(int i = 0; i < spheres.length(); i++){
 		HitInfo hit = TraceSphere(ray, i);
 		if(hit.didHit){
@@ -144,5 +152,6 @@ void main(){
 			}
 		}
 	}
+
 	FragColor = vec4(currentColor, 1);
 }
