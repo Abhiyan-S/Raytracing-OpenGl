@@ -9,6 +9,7 @@
 #include<chrono>
 
 bool running = true;
+int width = 800, height = 600;
 
 void CreateScreenQuad(GLuint *vao, GLuint *vbo) {
 	float verts[] = {
@@ -34,7 +35,7 @@ int main(int argc, char* argv[]) {
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 4);
 
-	int width = 800, height = 600;
+
 	SDL_Window* window = SDL_CreateWindow("Window", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_OPENGL);
 	SDL_GLContext context = SDL_GL_CreateContext(window);
 	gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress);
@@ -57,18 +58,21 @@ int main(int argc, char* argv[]) {
 	scene.UpdateCamera(camera);
 
 	std::vector<Sphere> spheres = { 
-									Sphere(glm::vec3(-0.5,0,2), 0.1f),
-									Sphere(glm::vec3(0,0,10), 0.5),
-									Sphere(glm::vec3(0.5,0,2), 0.1f)
+									Sphere(glm::vec3(0,-22,2), 20),
+									Sphere(glm::vec3(0,0,0), 3),
+									Sphere(glm::vec3(5,0,0), 2),
+									Sphere(glm::vec3(8,0,0), 1),
 								  };
 
 	spheres[0].material.color = glm::vec3(1, 1, 0);
-	spheres[1].material.color = glm::vec3(1, 0, 1);
+	spheres[1].material.roughness = 0.9;
+	spheres[1].material.color = glm::vec3(0.8, 0, 1);
+	spheres[2].material.roughness = 0;
 	spheres[2].material.color = glm::vec3(1, 1, 1);
 
 	GLuint ssbo_lights;
 	std::vector<Light> lights = {
-									Light(glm::vec3(0,5,5), glm::vec3(1,0,0), 1)
+									Light(glm::vec3(0,7,2), glm::vec3(1,1,1),0.5)
 								   };
 
 	scene.UpdateSpheres(spheres);
@@ -82,8 +86,9 @@ int main(int argc, char* argv[]) {
 	const Uint8* keystate = SDL_GetKeyboardState(NULL);
 	SDL_SetRelativeMouseMode(SDL_TRUE);
 
+	GLuint seedLoc = glGetUniformLocation(shader.ID, "frameSeed");
 	float speed = 5;
-	float sensitivity = 0.0005;
+	float sensitivity = 0.001;
 	while (running) {
 		auto start = std::chrono::high_resolution_clock::now();
 		while (SDL_PollEvent(&event)) {
@@ -107,13 +112,13 @@ int main(int argc, char* argv[]) {
 		
 		scene.UpdateCamera(camera);
 		glClearColor(0, 0, 0, 1);
-		glClear(GL_COLOR_BUFFER_BIT);
 
 		shader.Use();
+		glUniform1i(seedLoc, rand() % 100);
 		glBindVertexArray(vao_quad);
 		glUniform2f(resLoc, width, height);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
-
+		
 		
 		SDL_GL_SwapWindow(window);
 		auto end = std::chrono::high_resolution_clock::now();

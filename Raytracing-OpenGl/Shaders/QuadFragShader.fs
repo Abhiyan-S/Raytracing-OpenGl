@@ -3,6 +3,9 @@
 out vec4 FragColor;
 uniform vec2 resolution;
 
+uniform int frameSeed;
+float fSeed = 0;
+
 struct Material{
 	vec3 color;
 	float roughness;
@@ -54,6 +57,7 @@ struct HitInfo{
 	float distance;
 	vec3 normal;
 	vec3 point;
+	Material material;
 };
 
 
@@ -74,10 +78,11 @@ HitInfo TraceSphere(Ray ray, int sIdx){
 		float dst2 = (-b - s)/2;
 
 		if(dst1*dst2 < 0){
+			hit.didHit = true;
 			hit.distance = max(dst1, dst2);
 			hit.point = ray.origin + ray.dir * hit.distance;
 			hit.normal = normalize(hit.point - spheres[sIdx].position);
-			hit.didHit = true;
+			hit.material = spheres[sIdx].material;
 		}
 		else if(dst1 < 0 && dst2 < 0){
 			hit.didHit = false;
@@ -87,6 +92,7 @@ HitInfo TraceSphere(Ray ray, int sIdx){
 			hit.distance = min(dst1, dst2);
 			hit.point = ray.origin + ray.dir * hit.distance;
 			hit.normal = normalize(hit.point - spheres[sIdx].position);
+			hit.material = spheres[sIdx].material;
 		}
 	}
 
@@ -111,47 +117,82 @@ vec3 GetLight(vec3 point, vec3 normal){
 			}
 		}
 		if(!blocked){
-			currentColor += (lights[l].color * lights[l].intensity * max(dot(normal, ray.dir), 0.0));
+			currentColor += (lights[l].color * lights[l].intensity * dot(normal, ray.dir));
 		}
 	}
 	return currentColor;
 }
 
-float Random(int seed) {
+float Random() {
 	vec2 co = gl_FragCoord.xy;
-    return fract(sin(dot(co.xy ,vec2(12.9898,78.233)) + seed) * 43758.5453);
+	fSeed++;
+    return fract(sin(dot(co.xy ,vec2(12,78)) + frameSeed+fSeed) * 4375);
 }
 
-#define BOUNCES = 1
-
-void main(){
-	vec3 currentColor = vec3(0.529, 0.808, 0.922);
-	float x = (((gl_FragCoord.x - 0.5)/resolution.x) - 0.5) * 2;
-	float y = (((gl_FragCoord.y - 0.5)/resolution.y) - 0.5) * 2;
-
-	Ray ray;
-	ray.origin = cam.position;
-	vec3 test = cam.position;
+vec3 RandomVectorInHemisphere(vec3 normal){
+	vec3 rand = normalize(vec3((Random()-0.5)*2,(Random()-0.5)*2,(Random()-0.5)*2));
+	if(dot(rand, normal) < 0){
+		return -rand;
+	}
+	return rand;
+}
 
 
-	vec3 pointInScreen = (cam.position + (cam.dir * cam.focalLength)) + (cam.right * (x * (cam.screenWidth/2))) + (cam.up * (y * (cam.screenHeight/2)));
 
-	ray.dir = normalize(pointInScreen - cam.position);
-
+HitInfo TracePath(Ray ray){
 	HitInfo closestHitInfo;
 	closestHitInfo.didHit = false;
 	closestHitInfo.distance = 1.0/0.0;
-
 
 	for(int i = 0; i < spheres.length(); i++){
 		HitInfo hit = TraceSphere(ray, i);
 		if(hit.didHit){
 			if(hit.distance < closestHitInfo.distance){
 				closestHitInfo = hit;
-				currentColor = spheres[i].material.color * GetLight(hit.point + hit.normal * 0.0001, hit.normal);
+				
 			}
 		}
 	}
+	return closestHitInfo;
+}
+#define BOUNCES 3
 
-	FragColor = vec4(currentColor, 1);
+void main(){
+	
+	float x = (((gl_FragCoord.x - 0.5)/resolution.x) - 0.5) * 2;
+	float y = (((gl_FragCoord.y - 0.5)/resolution.y) - 0.5) * 2;
+
+	Ray ray;
+	
+	vec3 test = cam.position;
+
+
+	vec3 pointInScreen = (cam.position + (cam.dir * cam.focalLength)) + (cam.right * (x * (cam.screenWidth/2))) + (cam.up * (y * (cam.screenHeight/2)));
+
+	vec3 currentColor = vec3(0.529, 0.808, 0.922);
+	vec3 acolor = vec3(0);
+	
+	
+	for(int s = 0; s<20; s++){
+		ray.origin = cam.position;
+		ray.dir = normalize(pointInScreen - cam.position);
+		vec3 rayColor = vec3(1,1,1);
+		for(int bounce=0; bounce < BOUNCES; bounce++){
+			HitInfo hit = TracePath(ray);
+			if(hit.didHit){
+				rayColor *= hit.material.color;
+				acolor += rayColor * GetLight(hit.point + hit.normal * 0.001, hit.normal) * hit.material.roughness;
+			}
+			else{
+				break;
+			}
+			ray.origin = hit.point;
+			vec3 diffuse = RandomVectorInHemisphere(hit.normal);
+			vec3 specular = ray.dir - 2 * dot(ray.dir,hit.normal) * hit.normal;
+
+			vec3 AB = specular - diffuse;
+			ray.dir = diffuse + AB * (1-hit.material.roughness);
+		}
+	}
+	FragColor = vec4(acolor/20, 1);
 }
