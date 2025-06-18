@@ -95,3 +95,9 @@ void Scene::UpdateSpheres(const std::vector<Sphere>& spheres) {
 	}
 	glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(GPUSphere) * gpuSpheres.size(), gpuSpheres.data(), GL_STATIC_DRAW);
 }
+
+void Scene::Delete() {
+	glDeleteBuffers(1, &ubo_cam);
+	glDeleteBuffers(1, &ssbo_lights);
+	glDeleteBuffers(1, &ssbo_spheres);
+}

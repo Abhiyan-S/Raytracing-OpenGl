@@ -126,7 +126,7 @@ vec3 GetLight(vec3 point, vec3 normal){
 float Random() {
 	vec2 co = gl_FragCoord.xy;
 	fSeed++;
-    return fract(sin(dot(co.xy ,vec2(12,78)) + frameSeed+fSeed) * 4375);
+    return fract(sin(dot(co, vec2(12.9898, 78.233)) +fSeed + frameSeed) * 43758.5453);
 }
 
 vec3 RandomVectorInHemisphere(vec3 normal){
@@ -147,7 +147,7 @@ HitInfo TracePath(Ray ray){
 	for(int i = 0; i < spheres.length(); i++){
 		HitInfo hit = TraceSphere(ray, i);
 		if(hit.didHit){
-			if(hit.distance < closestHitInfo.distance){
+			if(hit.distance > 0.0001 && hit.distance < closestHitInfo.distance){
 				closestHitInfo = hit;
 				
 			}
@@ -155,12 +155,12 @@ HitInfo TracePath(Ray ray){
 	}
 	return closestHitInfo;
 }
-#define BOUNCES 3
+#define BOUNCES 5
 
 void main(){
 	
-	float x = (((gl_FragCoord.x - 0.5)/resolution.x) - 0.5) * 2;
-	float y = (((gl_FragCoord.y - 0.5)/resolution.y) - 0.5) * 2;
+	float x = (((gl_FragCoord.x)/resolution.x) - 0.5) * 2;
+	float y = (((gl_FragCoord.y)/resolution.y) - 0.5) * 2;
 
 	Ray ray;
 	
@@ -172,27 +172,26 @@ void main(){
 	vec3 currentColor = vec3(0.529, 0.808, 0.922);
 	vec3 acolor = vec3(0);
 	
-	
-	for(int s = 0; s<20; s++){
+	for(int s=0; s<25; s++){
+		vec3 rayColor = vec3(1,1,1);
 		ray.origin = cam.position;
 		ray.dir = normalize(pointInScreen - cam.position);
-		vec3 rayColor = vec3(1,1,1);
-		for(int bounce=0; bounce < BOUNCES; bounce++){
-			HitInfo hit = TracePath(ray);
-			if(hit.didHit){
-				rayColor *= hit.material.color;
-				acolor += rayColor * GetLight(hit.point + hit.normal * 0.001, hit.normal) * hit.material.roughness;
-			}
-			else{
-				break;
-			}
-			ray.origin = hit.point;
-			vec3 diffuse = RandomVectorInHemisphere(hit.normal);
-			vec3 specular = ray.dir - 2 * dot(ray.dir,hit.normal) * hit.normal;
-
-			vec3 AB = specular - diffuse;
-			ray.dir = diffuse + AB * (1-hit.material.roughness);
+	for(int bounce=0; bounce < BOUNCES; bounce++){
+		HitInfo hit = TracePath(ray);
+		if(hit.didHit){
+			acolor += hit.material.color * GetLight(hit.point + hit.normal * 0.001, hit.normal) * hit.material.roughness;
 		}
+		else{
+			break;
+		}
+		ray.origin = hit.point;
+
+		vec3 diffuse = RandomVectorInHemisphere(hit.normal);
+
+		vec3 specular = ray.dir - 2 * dot(ray.dir,hit.normal) * hit.normal;
+		vec3 AB = specular - diffuse;
+		ray.dir = diffuse + AB * (1-hit.material.roughness);
 	}
-	FragColor = vec4(acolor/20, 1);
+	}
+	FragColor = vec4(acolor/25, 1);
 }

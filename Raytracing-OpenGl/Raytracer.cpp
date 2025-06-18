@@ -58,21 +58,22 @@ int main(int argc, char* argv[]) {
 	scene.UpdateCamera(camera);
 
 	std::vector<Sphere> spheres = { 
-									Sphere(glm::vec3(0,-22,2), 20),
+									Sphere(glm::vec3(0,-102,2), 100),
 									Sphere(glm::vec3(0,0,0), 3),
-									Sphere(glm::vec3(5,0,0), 2),
-									Sphere(glm::vec3(8,0,0), 1),
+									Sphere(glm::vec3(6,0,0), 2),
+									Sphere(glm::vec3(10,0,0), 1),
 								  };
 
-	spheres[0].material.color = glm::vec3(1, 1, 0);
+	spheres[0].material.roughness = 1;
+	spheres[0].material.color = glm::vec3(1, 1, 1);
 	spheres[1].material.roughness = 0.9;
 	spheres[1].material.color = glm::vec3(0.8, 0, 1);
-	spheres[2].material.roughness = 0;
-	spheres[2].material.color = glm::vec3(1, 1, 1);
+	spheres[2].material.roughness = 0.1;
+	spheres[2].material.color = glm::vec3(1, 1, 0);
 
 	GLuint ssbo_lights;
 	std::vector<Light> lights = {
-									Light(glm::vec3(0,7,2), glm::vec3(1,1,1),0.5)
+									Light(glm::vec3(7,5,2), glm::vec3(1,1,1),0.5)
 								   };
 
 	scene.UpdateSpheres(spheres);
@@ -103,18 +104,18 @@ int main(int argc, char* argv[]) {
 				camera.dir = glm::normalize(camera.dir + camera.right * dx * sensitivity - camera.up * dy * sensitivity);
 			}
 		}
-		if (keystate[SDL_SCANCODE_W]) camera.position += camera.dir * speed * (float)dt;
-		if (keystate[SDL_SCANCODE_S]) camera.position -= camera.dir * speed * (float)dt;
-		if (keystate[SDL_SCANCODE_A]) camera.position -= camera.right * speed * (float)dt;
-		if (keystate[SDL_SCANCODE_D]) camera.position += camera.right * speed * (float)dt;
-		if (keystate[SDL_SCANCODE_Q]) camera.position -= camera.up * speed * (float)dt;
-		if (keystate[SDL_SCANCODE_E]) camera.position += camera.up * speed * (float)dt;
+		if (keystate[SDL_SCANCODE_W]) camera.position += camera.dir * speed * dt;
+		if (keystate[SDL_SCANCODE_S]) camera.position -= camera.dir * speed * dt;
+		if (keystate[SDL_SCANCODE_A]) camera.position -= camera.right * speed * dt;
+		if (keystate[SDL_SCANCODE_D]) camera.position += camera.right * speed * dt;
+		if (keystate[SDL_SCANCODE_Q]) camera.position -= camera.up * speed * dt;
+		if (keystate[SDL_SCANCODE_E]) camera.position += camera.up * speed * dt;
 		
 		scene.UpdateCamera(camera);
 		glClearColor(0, 0, 0, 1);
 
 		shader.Use();
-		glUniform1i(seedLoc, rand() % 100);
+		glUniform1i(seedLoc, rand() % 1000);
 		glBindVertexArray(vao_quad);
 		glUniform2f(resLoc, width, height);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -129,7 +130,7 @@ int main(int argc, char* argv[]) {
 			std::cout << "FPS: " << 1 / dt << "\n";
 		}
 	}
-
+	scene.Delete();
 	SDL_DestroyWindow(window);
 	SDL_GL_DeleteContext(context);
 	SDL_Quit();

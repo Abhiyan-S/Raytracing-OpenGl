@@ -89,4 +89,6 @@ public:
 	void UpdateSpheres(const std::vector<Sphere> &spheres);
 	void UpdateCamera(Camera &camera);
 	void UpdateLights(const std::vector<Light>& lights);
+
+	void Delete();
 };
