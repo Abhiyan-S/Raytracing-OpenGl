@@ -12,6 +12,7 @@ bool running = true;
 int width = 800, height = 600;
 
 void CreateScreenQuad(GLuint *vao, GLuint *vbo) {
+	std::cout << "Press up arrow and down arrow if the screen appears black initially\n";
 	float verts[] = {
 		-1,1,
 		 1,1,
@@ -100,8 +101,9 @@ int main(int argc, char* argv[]) {
 	int samples = 1;
 	glUniform1i(samplesLoc, samples);
 	glUniform1i(bouncesLoc, bounces);
-	float speed = 5;
+	float speed = 8;
 	float sensitivity = 0.001;
+
 	while (running) {
 		auto start = std::chrono::high_resolution_clock::now();
 		while (SDL_PollEvent(&event)) {

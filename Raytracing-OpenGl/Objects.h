@@ -41,47 +41,18 @@ public:
 	Light(glm::vec3 position, glm::vec3 color, float intensity) : position(position), color(color), intensity(intensity) {};
 };
 
-//MAKE SURE TO CHANGE THE STRUCTURES IN THE FRAGMENT SHADERS IF YOU ARE CHANGING THE STRUCTS BELOW
-
-struct GPUMaterial {
-	glm::vec3 col;
-	float pad1;
-	float roughness;
-	int emits;
-	float emissionStrength;
-	float pad2;
-	GPUMaterial(glm::vec3 col, float roughness, int emits, float emissionStrength) : col(col), roughness(roughness), emits(emits), emissionStrength(emissionStrength) {};
+struct Triangle {
+	glm::vec3 a, b, c;
+	Triangle(glm::vec3 a, glm::vec3 b, glm::vec3 c) {};
 };
 
-struct GPULight {
-	glm::vec3 pos;
-	float pad1;
-	glm::vec3 col;
-	float intensity;
-	GPULight(glm::vec3 pos, glm::vec3 col, float intensity) : pos(pos), col(col), intensity(intensity) {};
-};
+class Object {
+public:
+	glm::vec3 position;
+	float scale;
+	std::vector<Triangle> triangles;
 
-struct GPUSphere {
-	glm::vec3 pos;
-	float r;
-	GPUMaterial mat;
-	GPUSphere(glm::vec3 pos, float r, GPUMaterial mat) : pos(pos), r(r), mat(mat) {};
-};
-
-struct GPUCamera {
-	glm::vec3 pos; //12
-	float pad1; //16
-	glm::vec3 dir; //28
-	float pad2;// 32
-	glm::vec3 up;
-	float pad3;
-	glm::vec3 right;
-	float pad4;
-	float fov;//36
-	float focalLength;//40
-	float aspectRatio;//44
-	float screenWidth;//48
-	float screenHeight;//52
+	Object(glm::vec3 pos, float s) : position(pos), scale(s) {};
 };
 
 class Scene {

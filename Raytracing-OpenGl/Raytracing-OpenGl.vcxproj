@@ -143,6 +143,7 @@
     <None Include="Shaders\QuadVertexShader.vs" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="GPUStructs.h" />
     <ClInclude Include="Objects.h" />
     <ClInclude Include="Shaders\Shader.h" />
   </ItemGroup>

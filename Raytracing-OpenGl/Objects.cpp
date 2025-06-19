@@ -2,6 +2,7 @@
 #include "Objects.h"
 #include "Shaders/Shader.h"
 #include<glm/gtc/matrix_transform.hpp>
+#include "GPUStructs.h"
 #define CAMERA_BINDING 0
 #define LIGHTS_BINDING 1
 #define SPHERES_BINDING 2

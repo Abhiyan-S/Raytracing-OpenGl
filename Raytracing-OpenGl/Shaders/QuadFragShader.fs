@@ -65,8 +65,6 @@ struct HitInfo{
 	Material material;
 };
 
-
-
 HitInfo TraceSphere(Ray ray, int sIdx){
 	vec3 offset = ray.origin - spheres[sIdx].position;
 	float b = 2 * dot(offset, ray.dir);
@@ -168,13 +166,9 @@ void main(){
 	float y = (((gl_FragCoord.y)/resolution.y) - 0.5) * 2;
 
 	Ray ray;
-	
-	vec3 test = cam.position;
-
 
 	vec3 pointInScreen = (cam.position + (cam.dir * cam.focalLength)) + (cam.right * (x * (cam.screenWidth/2))) + (cam.up * (y * (cam.screenHeight/2)));
 
-	vec3 currentColor = vec3(0.529, 0.808, 0.922);
 	vec3 acolor = vec3(0);
 	
 	for(int s=0; s<SAMPLES; s++){
