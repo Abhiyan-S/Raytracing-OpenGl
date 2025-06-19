@@ -90,8 +90,8 @@ void Scene::UpdateLights(const std::vector<Light>& lights) {
 void Scene::UpdateSpheres(const std::vector<Sphere>& spheres) {
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_spheres);
 	std::vector<GPUSphere> gpuSpheres;
-	for (int i = 0; i < spheres.size(); i++) {
-		gpuSpheres.push_back(GPUSphere(spheres[i].position, spheres[i].radius, spheres[i].material));
+	for (Sphere sphere : spheres) {
+		gpuSpheres.push_back(GPUSphere(sphere.position, sphere.radius, GPUMaterial(sphere.material.color, sphere.material.roughness, sphere.material.emits? 1:0, sphere.material.emissionStrength)));
 	}
 	glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(GPUSphere) * gpuSpheres.size(), gpuSpheres.data(), GL_STATIC_DRAW);
 }
@@ -100,4 +100,11 @@ void Scene::Delete() {
 	glDeleteBuffers(1, &ubo_cam);
 	glDeleteBuffers(1, &ssbo_lights);
 	glDeleteBuffers(1, &ssbo_spheres);
+}
+
+Material::Material(glm::vec3 color, float roughness){
+	this->color = color;
+	this->roughness = roughness;
+	this->emits = false;
+	this->emissionStrength = 0;
 }

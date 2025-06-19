@@ -59,21 +59,27 @@ int main(int argc, char* argv[]) {
 
 	std::vector<Sphere> spheres = { 
 									Sphere(glm::vec3(0,-102,2), 100),
-									Sphere(glm::vec3(0,0,0), 3),
+									Sphere(glm::vec3(0,1,0), 3),
 									Sphere(glm::vec3(6,0,0), 2),
-									Sphere(glm::vec3(10,0,0), 1),
+									Sphere(glm::vec3(10,0,0), 1)
 								  };
 
 	spheres[0].material.roughness = 1;
 	spheres[0].material.color = glm::vec3(1, 1, 1);
-	spheres[1].material.roughness = 0.9;
-	spheres[1].material.color = glm::vec3(0.8, 0, 1);
+	spheres[1].material.emits = true;
+	spheres[1].material.emissionStrength = 4;
+	spheres[1].material.color = glm::vec3(0.8, 0.1, 1);
 	spheres[2].material.roughness = 0.1;
 	spheres[2].material.color = glm::vec3(1, 1, 0);
 
+	spheres[3].material.emits = true;
+	spheres[3].material.emissionStrength = 4;
+	spheres[3].material.color = glm::vec3(0.1, 1, 0.1);
+
 	GLuint ssbo_lights;
 	std::vector<Light> lights = {
-									Light(glm::vec3(7,5,2), glm::vec3(1,1,1),0.5)
+									Light(glm::vec3(7,5,2), glm::vec3(1,1,1),1),
+									Light(glm::vec3(2,5,8), glm::vec3(1,0.4,0.3),1)
 								   };
 
 	scene.UpdateSpheres(spheres);
@@ -88,6 +94,9 @@ int main(int argc, char* argv[]) {
 	SDL_SetRelativeMouseMode(SDL_TRUE);
 
 	GLuint seedLoc = glGetUniformLocation(shader.ID, "frameSeed");
+	GLuint samplesLoc = glGetUniformLocation(shader.ID, "SAMPLES");
+	int samples = 1;
+	glUniform1i(samplesLoc, samples);
 	float speed = 5;
 	float sensitivity = 0.001;
 	while (running) {
@@ -96,6 +105,8 @@ int main(int argc, char* argv[]) {
 			if (event.type == SDL_QUIT) running = false;
 			if (event.type == SDL_KEYDOWN) {
 				if (event.key.keysym.sym == SDLK_ESCAPE) running = false;
+				if (event.key.keysym.sym == SDLK_RIGHT) { samples += 1; glUniform1i(samplesLoc, samples); std::cout << "Increase\n"; }
+				if (event.key.keysym.sym == SDLK_LEFT) { samples -= 1; glUniform1i(samplesLoc, samples); std::cout << "Decrease\n"; }
 			}
 			if (event.type == SDL_MOUSEMOTION) {
 				float dx = event.motion.xrel;

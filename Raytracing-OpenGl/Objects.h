@@ -15,21 +15,21 @@ public:
 	Camera(glm::vec3 position, glm::vec3 dir, float horizontalFOV, float focalLength, float aspectRatio);
 };
 
-
-
 class Material {
 public:
 	glm::vec3 color;
 	float roughness;
-	Material(glm::vec3 color, float roughness) : color(color), roughness(roughness) {};
-	Material() : color(glm::vec3(0.5, 0.5, 0.5)), roughness(1) {};
+	bool emits;
+	float emissionStrength;
+	Material(glm::vec3 col, float roughness);
+	Material() : color(glm::vec3(0.5, 0.5, 0.5)), roughness(1), emits(false), emissionStrength(0) {};
 };
 
 class Sphere {
 public:
 	glm::vec3 position;
-	Material material;
 	float radius;
+	Material material;
 	Sphere(glm::vec3 pos, float r) : position(pos), radius(r) {};
 };
 
@@ -42,6 +42,17 @@ public:
 };
 
 //MAKE SURE TO CHANGE THE STRUCTURES IN THE FRAGMENT SHADERS IF YOU ARE CHANGING THE STRUCTS BELOW
+
+struct GPUMaterial {
+	glm::vec3 col;
+	float pad1;
+	float roughness;
+	int emits;
+	float emissionStrength;
+	float pad2;
+	GPUMaterial(glm::vec3 col, float roughness, int emits, float emissionStrength) : col(col), roughness(roughness), emits(emits), emissionStrength(emissionStrength) {};
+};
+
 struct GPULight {
 	glm::vec3 pos;
 	float pad1;
@@ -53,8 +64,8 @@ struct GPULight {
 struct GPUSphere {
 	glm::vec3 pos;
 	float r;
-	Material mat;
-	GPUSphere(glm::vec3 pos, float r, Material mat) : pos(pos), r(r), mat(mat) {};
+	GPUMaterial mat;
+	GPUSphere(glm::vec3 pos, float r, GPUMaterial mat) : pos(pos), r(r), mat(mat) {};
 };
 
 struct GPUCamera {

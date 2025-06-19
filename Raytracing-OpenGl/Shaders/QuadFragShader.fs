@@ -8,7 +8,12 @@ float fSeed = 0;
 
 struct Material{
 	vec3 color;
+	float pad1;
 	float roughness;
+	bool emits;
+	float emissionStrength;
+	float pad2;
+	//Aligning to multiple of 16bytes
 };
 
 struct Sphere{
@@ -137,8 +142,6 @@ vec3 RandomVectorInHemisphere(vec3 normal){
 	return rand;
 }
 
-
-
 HitInfo TracePath(Ray ray){
 	HitInfo closestHitInfo;
 	closestHitInfo.didHit = false;
@@ -155,7 +158,9 @@ HitInfo TracePath(Ray ray){
 	}
 	return closestHitInfo;
 }
-#define BOUNCES 5
+#define BOUNCES 12
+
+uniform int SAMPLES;
 
 void main(){
 	
@@ -172,14 +177,16 @@ void main(){
 	vec3 currentColor = vec3(0.529, 0.808, 0.922);
 	vec3 acolor = vec3(0);
 	
-	for(int s=0; s<25; s++){
+	for(int s=0; s<SAMPLES; s++){
 		vec3 rayColor = vec3(1,1,1);
 		ray.origin = cam.position;
 		ray.dir = normalize(pointInScreen - cam.position);
 	for(int bounce=0; bounce < BOUNCES; bounce++){
 		HitInfo hit = TracePath(ray);
 		if(hit.didHit){
-			acolor += hit.material.color * GetLight(hit.point + hit.normal * 0.001, hit.normal) * hit.material.roughness;
+			if(hit.material.emits) {acolor += hit.material.color * hit.material.emissionStrength;}
+			else acolor += hit.material.color * GetLight(hit.point + hit.normal * 0.001, hit.normal) * hit.material.roughness;
+			
 		}
 		else{
 			break;
@@ -193,5 +200,6 @@ void main(){
 		ray.dir = diffuse + AB * (1-hit.material.roughness);
 	}
 	}
-	FragColor = vec4(acolor/25, 1);
+	FragColor = vec4(acolor/SAMPLES, 1);
+
 }
