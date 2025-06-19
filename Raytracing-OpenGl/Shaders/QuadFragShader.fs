@@ -158,9 +158,9 @@ HitInfo TracePath(Ray ray){
 	}
 	return closestHitInfo;
 }
-#define BOUNCES 12
 
 uniform int SAMPLES;
+uniform int BOUNCES;
 
 void main(){
 	

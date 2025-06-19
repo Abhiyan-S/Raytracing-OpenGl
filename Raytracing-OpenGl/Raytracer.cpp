@@ -95,8 +95,11 @@ int main(int argc, char* argv[]) {
 
 	GLuint seedLoc = glGetUniformLocation(shader.ID, "frameSeed");
 	GLuint samplesLoc = glGetUniformLocation(shader.ID, "SAMPLES");
+	GLuint bouncesLoc = glGetUniformLocation(shader.ID, "BOUNCES");
+	int bounces = 1;
 	int samples = 1;
 	glUniform1i(samplesLoc, samples);
+	glUniform1i(bouncesLoc, bounces);
 	float speed = 5;
 	float sensitivity = 0.001;
 	while (running) {
@@ -105,8 +108,11 @@ int main(int argc, char* argv[]) {
 			if (event.type == SDL_QUIT) running = false;
 			if (event.type == SDL_KEYDOWN) {
 				if (event.key.keysym.sym == SDLK_ESCAPE) running = false;
-				if (event.key.keysym.sym == SDLK_RIGHT) { samples += 1; glUniform1i(samplesLoc, samples); std::cout << "Increase\n"; }
-				if (event.key.keysym.sym == SDLK_LEFT) { samples -= 1; glUniform1i(samplesLoc, samples); std::cout << "Decrease\n"; }
+				if (event.key.keysym.sym == SDLK_RIGHT) { samples += 1; glUniform1i(samplesLoc, samples); std::cout << "Samples set to "<<samples<<"\n"; }
+				if (event.key.keysym.sym == SDLK_LEFT) { samples -= 1; glUniform1i(samplesLoc, samples); std::cout << "Samples set to " << samples << "\n"; }
+
+				if (event.key.keysym.sym == SDLK_UP) { bounces += 1; glUniform1i(bouncesLoc, bounces); std::cout << "Bounces set to " << bounces << "\n"; }
+				if (event.key.keysym.sym == SDLK_DOWN) { bounces -= 1; glUniform1i(bouncesLoc, bounces); std::cout << "Bounces set to " << bounces << "\n"; }
 			}
 			if (event.type == SDL_MOUSEMOTION) {
 				float dx = event.motion.xrel;
