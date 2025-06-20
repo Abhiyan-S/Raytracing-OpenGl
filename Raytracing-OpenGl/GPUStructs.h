@@ -54,3 +54,10 @@ struct GPUTriangle {
 	float objectIndex;
 	GPUTriangle(glm::vec3 a, glm::vec3 b, glm::vec3 c, float objectIdx) : a(a), b(b), c(c), objectIndex(objectIdx), pad1(0), pad2(0), pad3(0) {};
 };
+
+struct GPUObject {
+	glm::vec3 pos;
+	float trigIdxStart;
+	float trigCount;
+	GPUMaterial mat;
+};

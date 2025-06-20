@@ -50,9 +50,13 @@ class Object {
 public:
 	glm::vec3 position;
 	float scale;
+	Material material;
 	std::vector<Triangle> triangles;
 
 	Object(glm::vec3 pos, float s) : position(pos), scale(s) {};
+	void AddTriangle(Triangle triangle) {
+		triangles.push_back(triangle);
+	}
 };
 
 class Scene {

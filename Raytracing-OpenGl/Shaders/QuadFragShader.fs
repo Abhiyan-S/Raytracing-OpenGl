@@ -29,6 +29,7 @@ struct Light{
 	float intensity;
 };
 
+
 layout(std430, binding = 2) buffer Spheres{
 	Sphere spheres[];
 };

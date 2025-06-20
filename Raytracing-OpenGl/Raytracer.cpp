@@ -79,8 +79,8 @@ int main(int argc, char* argv[]) {
 
 	GLuint ssbo_lights;
 	std::vector<Light> lights = {
-									Light(glm::vec3(7,5,2), glm::vec3(1,1,1),1),
-									Light(glm::vec3(2,5,8), glm::vec3(1,0.4,0.3),1)
+									Light(glm::vec3(7,5,2), glm::vec3(1,1,1),0.25),
+									Light(glm::vec3(2,5,8), glm::vec3(1,0.4,0.3),0.25)
 								   };
 
 	scene.UpdateSpheres(spheres);
