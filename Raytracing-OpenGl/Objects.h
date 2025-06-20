@@ -41,9 +41,12 @@ public:
 	Light(glm::vec3 position, glm::vec3 color, float intensity) : position(position), color(color), intensity(intensity) {};
 };
 
-struct Triangle {
-	glm::vec3 a, b, c;
-	Triangle(glm::vec3 a, glm::vec3 b, glm::vec3 c) {};
+class Triangle {
+public:
+	glm::vec3 a, b, c, normal;
+	Triangle(glm::vec3 a, glm::vec3 b, glm::vec3 c, glm::vec3 normal);
+	Triangle(glm::vec3 a, glm::vec3 b, glm::vec3);
+	glm::vec3 CalculateNormal();
 };
 
 class Object {
@@ -65,6 +68,8 @@ public:
 	GLuint ubo_cam;
 	GLuint ssbo_lights;
 	GLuint ssbo_spheres;
+	GLuint ssbo_objects;
+	GLuint ssbo_triangles;
 
 	Scene(Shader shader);
 	void InitScene();
@@ -72,9 +77,11 @@ public:
 	void InitLights();
 	void InitSpheres();
 
+	//All of these functions send data to the GPU
 	void UpdateSpheres(const std::vector<Sphere> &spheres);
 	void UpdateCamera(Camera &camera);
 	void UpdateLights(const std::vector<Light>& lights);
+	void UpdateObjects(const std::vector<Object>& objects);
 
 	void Delete();
 };

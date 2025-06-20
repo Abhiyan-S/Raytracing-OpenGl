@@ -3,19 +3,19 @@
 
 //!!!!MAKE SURE TO CHANGE THE STRUCTURES IN THE FRAGMENT SHADERS IF YOU ARE CHANGING THE STRUCTS BELOW!!!!
 
-struct GPUMaterial {
+struct GPUMaterial { //32 bytes
 	glm::vec3 col;
 	float roughness;
 	int emits;
 	float emissionStrength;
 	float pad1 = 0;
 	float pad2 = 0;
-	GPUMaterial(glm::vec3 col, float roughness, int emits, float emissionStrength) : col(col), roughness(roughness), emits(emits), emissionStrength(emissionStrength) {};
+	GPUMaterial(glm::vec3 col, float roughness, bool emits, float emissionStrength) : col(col), roughness(roughness), emits(emits? 1:0), emissionStrength(emissionStrength) {};
 };
 
 struct GPULight {
 	glm::vec3 pos;
-	float pad1;
+	float pad1 = 0;
 	glm::vec3 col;
 	float intensity;
 	GPULight(glm::vec3 pos, glm::vec3 col, float intensity) : pos(pos), col(col), intensity(intensity) {};
@@ -43,19 +43,25 @@ struct GPUCamera {
 	float screenHeight;//80
 };
 
-struct GPUTriangle {
+struct GPUTriangle { // 64 bytes
 	glm::vec3 a;
 	float pad1 = 0;
 	glm::vec3 b;
 	float pad2 = 0;
 	glm::vec3 c;
+	float pad3 = 0;
+	glm::vec3 normal;
 	float objectIndex;
-	GPUTriangle(glm::vec3 a, glm::vec3 b, glm::vec3 c, float objectIdx) : a(a), b(b), c(c), objectIndex(objectIdx) {};
+	GPUTriangle(glm::vec3 a, glm::vec3 b, glm::vec3 c, glm::vec3 normal, float objectIdx) : a(a), b(b), c(c), normal(normal), objectIndex(objectIdx) {};
 };
 
-struct GPUObject {
+struct GPUObject { // 64 bytes
 	glm::vec3 pos;
-	float trigIdxStart;
+	float scale;
+	float trigStartIdx;
 	float trigCount;
 	GPUMaterial mat;
+	float pad1 = 0;
+	float pad2 = 0;
+	GPUObject(glm::vec3 pos, float scale, float trigStartIdx, float trigCount, GPUMaterial mat) : pos(pos), scale(scale), trigStartIdx(trigStartIdx), trigCount(trigCount), mat(mat) {};
 };

@@ -6,13 +6,13 @@ uniform vec2 resolution;
 uniform int frameSeed;
 float fSeed = 0;
 
-struct Material{
+struct Material{ //32 bytes
 	vec3 color;
 	float roughness;
 	bool emits;
 	float emissionStrength;
 	//padding here
-	//Aligning to multiple of 16bytes
+	//padding here
 };
 
 struct Sphere{
@@ -23,10 +23,39 @@ struct Sphere{
 
 struct Light{
 	vec3 position;
+	//pading here
 	vec3 color;
 	float intensity;
 };
 
+struct Triangle{
+	vec3 a;
+	//padding
+	vec3 b;
+	//padding
+	vec3 c;
+	//padding
+	vec3 normal;
+	float objectIdx;
+};
+
+struct Object{ // 64 bytes
+	vec3 position;
+	float scale;
+	float trigStartIdx;
+	float trigCount;
+	Material material;
+	//padding here
+	//padding here
+};
+
+layout(std430, binding = 4) buffer Triangles{
+	Triangle triangles[];
+};
+
+layout(std430, binding = 3) buffer Objects{
+	Object objects[];
+};
 
 layout(std430, binding = 2) buffer Spheres{
 	Sphere spheres[];
@@ -62,6 +91,11 @@ struct HitInfo{
 	vec3 point;
 	Material material;
 };
+HitInfo TraceObject(Ray ray, int oIdx){
+	HitInfo hit;
+	return hit;
+}
+
 
 HitInfo TraceSphere(Ray ray, int sIdx){
 	vec3 offset = ray.origin - spheres[sIdx].position;

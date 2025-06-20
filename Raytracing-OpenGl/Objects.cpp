@@ -3,9 +3,12 @@
 #include "Shaders/Shader.h"
 #include<glm/gtc/matrix_transform.hpp>
 #include "GPUStructs.h"
+
 #define CAMERA_BINDING 0
 #define LIGHTS_BINDING 1
 #define SPHERES_BINDING 2
+#define OBJECTS_BINDING 3
+#define TRIANGLES_BINDING 4
 
 Camera::Camera(glm::vec3 position, glm::vec3 dir, float horizontalFOV, float focalLength, float aspectRatio) { // FOV in degrees
 	dir = glm::normalize(dir);
@@ -90,8 +93,8 @@ void Scene::UpdateLights(const std::vector<Light>& lights) {
 void Scene::UpdateSpheres(const std::vector<Sphere>& spheres) {
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_spheres);
 	std::vector<GPUSphere> gpuSpheres;
-	for (Sphere sphere : spheres) {
-		gpuSpheres.push_back(GPUSphere(sphere.position, sphere.radius, GPUMaterial(sphere.material.color, sphere.material.roughness, sphere.material.emits? 1:0, sphere.material.emissionStrength)));
+	for (const Sphere& sphere : spheres) {
+		gpuSpheres.push_back(GPUSphere(sphere.position, sphere.radius, GPUMaterial(sphere.material.color, sphere.material.roughness, sphere.material.emits, sphere.material.emissionStrength)));
 	}
 	glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(GPUSphere) * gpuSpheres.size(), gpuSpheres.data(), GL_STATIC_DRAW);
 }
@@ -102,9 +105,45 @@ void Scene::Delete() {
 	glDeleteBuffers(1, &ssbo_spheres);
 }
 
+void Scene::UpdateObjects(const std::vector<Object>& objects) {
+	//TODO: load the following data to gpu buffer
+	std::vector<GPUObject> gpuObjects;
+	std::vector<GPUTriangle> gpuTriangles;
+
+	int trigStartIdx = 0;
+	for (int o = 0; o < objects.size(); o++) {
+		for (const Triangle& trig : objects[o].triangles) {
+			gpuTriangles.push_back(GPUTriangle(trig.a, trig.b, trig.c, trig.normal, o));
+		}
+		int t = objects[o].triangles.size();
+		gpuObjects.push_back(GPUObject(objects[o].position, objects[o].scale, trigStartIdx, t, GPUMaterial(objects[o].material.color, objects[o].material.roughness, objects[o].material.emits, objects[o].material.emissionStrength)));
+		trigStartIdx += t;
+	}
+}
+
 Material::Material(glm::vec3 color, float roughness){
 	this->color = color;
 	this->roughness = roughness;
 	this->emits = false;
 	this->emissionStrength = 0;
 }
+
+Triangle::Triangle(glm::vec3 a, glm::vec3 b, glm::vec3 c, glm::vec3 normal) {
+	this->a = a;
+	this->b = b;
+	this->c = c;
+	this->normal = normal;
+}
+
+Triangle::Triangle(glm::vec3 a, glm::vec3 b, glm::vec3 c) {
+	this->a = a;
+	this->b = b;
+	this->c = c;
+	this->normal = CalculateNormal();
+}
+
+glm::vec3 Triangle::CalculateNormal() {
+	return glm::normalize(glm::cross(a, b));
+}
+
+
