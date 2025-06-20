@@ -8,11 +8,10 @@ float fSeed = 0;
 
 struct Material{
 	vec3 color;
-	float pad1;
 	float roughness;
 	bool emits;
 	float emissionStrength;
-	float pad2;
+	//padding here
 	//Aligning to multiple of 16bytes
 };
 
@@ -24,7 +23,6 @@ struct Sphere{
 
 struct Light{
 	vec3 position;
-	float pad1;
 	vec3 color;
 	float intensity;
 };
@@ -40,13 +38,12 @@ layout(std430, binding = 1) buffer Lights{
 
 layout(std140, binding = 0) uniform Camera{
 	vec3 position;
-	float pad1;
+	//padding
 	vec3 dir;
-	float pad2;
+	//padding
 	vec3 up;
-	float pad3;
+	//padding
 	vec3 right;
-	float pad4;
 	float horizontalFOV;
 	float focalLength;
 	float aspectRatio;

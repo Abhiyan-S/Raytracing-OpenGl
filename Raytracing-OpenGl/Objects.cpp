@@ -67,7 +67,6 @@ void Scene::UpdateCamera(Camera &camera) {
 	camData.up = camera.up;
 	camData.pad3 = 0;
 	camData.right = camera.right;
-	camData.pad4 = 0;
 	camData.fov = camera.horizontalFOV;
 	camData.focalLength = camera.focalLength;
 	camData.aspectRatio = camera.aspectRatio;

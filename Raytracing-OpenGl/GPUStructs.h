@@ -1,15 +1,15 @@
 #pragma once
 #include<glm/glm.hpp>
 
-//MAKE SURE TO CHANGE THE STRUCTURES IN THE FRAGMENT SHADERS IF YOU ARE CHANGING THE STRUCTS BELOW
+//!!!!MAKE SURE TO CHANGE THE STRUCTURES IN THE FRAGMENT SHADERS IF YOU ARE CHANGING THE STRUCTS BELOW!!!!
 
 struct GPUMaterial {
 	glm::vec3 col;
-	float pad1;
 	float roughness;
 	int emits;
 	float emissionStrength;
-	float pad2;
+	float pad1 = 0;
+	float pad2 = 0;
 	GPUMaterial(glm::vec3 col, float roughness, int emits, float emissionStrength) : col(col), roughness(roughness), emits(emits), emissionStrength(emissionStrength) {};
 };
 
@@ -33,15 +33,14 @@ struct GPUCamera {
 	float pad1; //16
 	glm::vec3 dir; //28
 	float pad2;// 32
-	glm::vec3 up;
-	float pad3;
-	glm::vec3 right;
-	float pad4;
-	float fov;//36
-	float focalLength;//40
-	float aspectRatio;//44
-	float screenWidth;//48
-	float screenHeight;//52
+	glm::vec3 up;//44
+	float pad3;//48
+	glm::vec3 right;//60
+	float fov;//64
+	float focalLength;//68
+	float aspectRatio;//72
+	float screenWidth;//76
+	float screenHeight;//80
 };
 
 struct GPUTriangle {
@@ -50,9 +49,8 @@ struct GPUTriangle {
 	glm::vec3 b;
 	float pad2 = 0;
 	glm::vec3 c;
-	float pad3 = 0;
 	float objectIndex;
-	GPUTriangle(glm::vec3 a, glm::vec3 b, glm::vec3 c, float objectIdx) : a(a), b(b), c(c), objectIndex(objectIdx), pad1(0), pad2(0), pad3(0) {};
+	GPUTriangle(glm::vec3 a, glm::vec3 b, glm::vec3 c, float objectIdx) : a(a), b(b), c(c), objectIndex(objectIdx) {};
 };
 
 struct GPUObject {
