@@ -58,10 +58,10 @@ struct GPUTriangle { // 64 bytes
 struct GPUObject { // 64 bytes
 	glm::vec3 pos;
 	float scale;
-	float trigStartIdx;
-	float trigCount;
+	int trigStartIdx;
+	int trigCount;
 	GPUMaterial mat;
 	float pad1 = 0;
 	float pad2 = 0;
-	GPUObject(glm::vec3 pos, float scale, float trigStartIdx, float trigCount, GPUMaterial mat) : pos(pos), scale(scale), trigStartIdx(trigStartIdx), trigCount(trigCount), mat(mat) {};
+	GPUObject(glm::vec3 pos, float scale, int trigStartIdx, int trigCount, GPUMaterial mat) : pos(pos), scale(scale), trigStartIdx(trigStartIdx), trigCount(trigCount), mat(mat) {};
 };

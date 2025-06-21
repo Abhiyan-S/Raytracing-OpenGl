@@ -42,8 +42,8 @@ struct Triangle{
 struct Object{ // 64 bytes
 	vec3 position;
 	float scale;
-	float trigStartIdx;
-	float trigCount;
+	int trigStartIdx;
+	int trigCount;
 	Material material;
 	//padding here
 	//padding here
@@ -91,9 +91,30 @@ struct HitInfo{
 	vec3 point;
 	Material material;
 };
+
 HitInfo TraceObject(Ray ray, int oIdx){
-	HitInfo hit;
-	return hit;
+	int startIdx = objects[oIdx].trigStartIdx;
+	int count = objects[oIdx].trigCount;
+	
+	HitInfo closestHitInfo;
+	closestHitInfo.distance = 1.0/0.0;
+	closestHitInfo.didHit = false;
+	for(int t = startIdx; t<startIdx + count; t++){
+		float dinominator = dot(ray.dir, triangles[t].normal);
+		if(dinominator == 0) continue;
+		float numerator = -dot(triangles[t].normal, ray.origin);
+
+		float d = numerator/dinominator;
+		if(d>0 && d<closestHitInfo.distance){
+			closestHitInfo.didHit = true;
+			closestHitInfo.distance = d;
+			closestHitInfo.normal = triangles[t].normal;
+			closestHitInfo.material = objects[oIdx].material;
+			closestHitInfo.point = ray.origin + ray.dir * d;
+		}
+	}
+
+	return closestHitInfo;
 }
 
 
