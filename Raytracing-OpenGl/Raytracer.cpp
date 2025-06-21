@@ -62,7 +62,8 @@ int main(int argc, char* argv[]) {
 									Sphere(glm::vec3(0,-102,2), 100),
 									Sphere(glm::vec3(0,1,0), 3),
 									Sphere(glm::vec3(6,0,0), 2),
-									Sphere(glm::vec3(10,0,0), 1)
+									Sphere(glm::vec3(10,0,0), 1),
+									Sphere(glm::vec3(0,20,0), 10)
 								  };
 
 	spheres[0].material.roughness = 1;
@@ -79,14 +80,15 @@ int main(int argc, char* argv[]) {
 
 	GLuint ssbo_lights;
 	std::vector<Light> lights = {
-									Light(glm::vec3(7,5,2), glm::vec3(1,1,1),0),
-									//Light(glm::vec3(2,5,8), glm::vec3(0,0.4,0.3),0.25)
+									Light(glm::vec3(7,5,2), glm::vec3(1,1,1),0.25),
+									Light(glm::vec3(2,5,8), glm::vec3(0,0.4,0.3),0.25)
 								   };
 
 	std::vector<Object> objects = {
 									Object(glm::vec3(0,0,0), 1)
 	};
 	objects[0].AddTriangle(Triangle(glm::vec3(-10, 10, 0), glm::vec3(0, 10, 10), glm::vec3(10, 10, 10)));
+	objects[0].material.color = glm::vec3(1, 0.1, 0.1);
 
 	scene.UpdateSpheres(spheres);
 	scene.UpdateLights(lights);

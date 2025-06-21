@@ -44,9 +44,9 @@ struct Object{ // 64 bytes
 	float scale;
 	int trigStartIdx;
 	int trigCount;
+	//padding
+	//padding
 	Material material;
-	//padding here
-	//padding here
 };
 
 layout(std430, binding = 4) buffer Triangles{
@@ -100,17 +100,30 @@ HitInfo TraceObject(Ray ray, int oIdx){
 	closestHitInfo.distance = 1.0/0.0;
 	closestHitInfo.didHit = false;
 	for(int t = startIdx; t<startIdx + count; t++){
-		float dinominator = dot(ray.dir, triangles[t].normal);
-		if(dinominator == 0) continue;
-		float numerator = -dot(triangles[t].normal, ray.origin - triangles[t].a);
+		Triangle tri = triangles[t];
+		vec3 edge1 = tri.b - tri.a;
+		vec3 edge2 = tri.c - tri.a;
+		vec3 pvec = cross(ray.dir, edge2);
+		float det = dot(edge1, pvec);
 
-		float d = numerator/dinominator;
-		if(d>0 && d<closestHitInfo.distance){
+		if (abs(det) < 0.0001) continue;
+
+		float invDet = 1.0 / det;
+		vec3 tvec = ray.origin - tri.a;
+		float u = dot(tvec, pvec) * invDet;
+		if (u < 0.0 || u > 1.0) continue;
+
+		vec3 qvec = cross(tvec, edge1);
+		float v = dot(ray.dir, qvec) * invDet;
+		if (v < 0.0 || u + v > 1.0) continue;
+
+		float d = dot(edge2, qvec) * invDet;
+		if (d > 0.0001 && d < closestHitInfo.distance){
 			closestHitInfo.didHit = true;
 			closestHitInfo.distance = d;
-			closestHitInfo.normal = triangles[t].normal;
-			closestHitInfo.material = objects[oIdx].material;
 			closestHitInfo.point = ray.origin + ray.dir * d;
+			closestHitInfo.normal = normalize(tri.normal);
+			closestHitInfo.material = objects[oIdx].material;
 		}
 	}
 
@@ -247,7 +260,7 @@ void main(){
 		HitInfo hit = TracePath(ray);
 		if(hit.didHit){
 			if(hit.material.emits) {acolor += hit.material.color * hit.material.emissionStrength;}
-			else acolor += hit.material.color * GetLight(hit.point + hit.normal * 0.001, hit.normal) * hit.material.roughness;
+			else { acolor += hit.material.color * GetLight(hit.point + hit.normal * 0.001, hit.normal) * hit.material.roughness;}
 			
 		}
 		else{
@@ -258,10 +271,8 @@ void main(){
 		vec3 diffuse = RandomVectorInHemisphere(hit.normal);
 
 		vec3 specular = ray.dir - 2 * dot(ray.dir,hit.normal) * hit.normal;
-		vec3 AB = specular - diffuse;
-		ray.dir = diffuse + AB * (1-hit.material.roughness);
+		ray.dir = normalize(mix(specular, diffuse, hit.material.roughness));
 	}
 	}
 	FragColor = vec4(acolor/SAMPLES, 1);
-
 }
