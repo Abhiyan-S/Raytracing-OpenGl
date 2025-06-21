@@ -36,7 +36,7 @@ struct Triangle{
 	vec3 c;
 	//padding
 	vec3 normal;
-	float objectIdx;
+	int objectIdx;
 };
 
 struct Object{ // 64 bytes
@@ -102,7 +102,7 @@ HitInfo TraceObject(Ray ray, int oIdx){
 	for(int t = startIdx; t<startIdx + count; t++){
 		float dinominator = dot(ray.dir, triangles[t].normal);
 		if(dinominator == 0) continue;
-		float numerator = -dot(triangles[t].normal, ray.origin);
+		float numerator = -dot(triangles[t].normal, ray.origin - triangles[t].a);
 
 		float d = numerator/dinominator;
 		if(d>0 && d<closestHitInfo.distance){
@@ -172,6 +172,15 @@ vec3 GetLight(vec3 point, vec3 normal){
 				}
 			}
 		}
+		for(int o = 0; o<objects.length(); o++){
+			hit = TraceObject(ray, o);
+			if(hit.didHit){
+				if(hit.distance < d){
+					blocked = true;
+					break;
+				}
+			}
+		}
 		if(!blocked){
 			currentColor += (lights[l].color * lights[l].intensity * dot(normal, ray.dir));
 		}
@@ -203,7 +212,14 @@ HitInfo TracePath(Ray ray){
 		if(hit.didHit){
 			if(hit.distance > 0.0001 && hit.distance < closestHitInfo.distance){
 				closestHitInfo = hit;
-				
+			}
+		}
+	}
+	for(int o = 0; o<objects.length(); o++){
+		HitInfo hit = TraceObject(ray, o);
+		if(hit.didHit){
+			if(hit.distance > 0.0001 && hit.distance < closestHitInfo.distance){
+				closestHitInfo = hit;
 			}
 		}
 	}
@@ -225,7 +241,6 @@ void main(){
 	vec3 acolor = vec3(0);
 	
 	for(int s=0; s<SAMPLES; s++){
-		vec3 rayColor = vec3(1,1,1);
 		ray.origin = cam.position;
 		ray.dir = normalize(pointInScreen - cam.position);
 	for(int bounce=0; bounce < BOUNCES; bounce++){

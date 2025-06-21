@@ -51,8 +51,8 @@ struct GPUTriangle { // 64 bytes
 	glm::vec3 c;
 	float pad3 = 0;
 	glm::vec3 normal;
-	float objectIndex;
-	GPUTriangle(glm::vec3 a, glm::vec3 b, glm::vec3 c, glm::vec3 normal, float objectIdx) : a(a), b(b), c(c), normal(normal), objectIndex(objectIdx) {};
+	int objectIndex;
+	GPUTriangle(glm::vec3 a, glm::vec3 b, glm::vec3 c, glm::vec3 normal, int objectIdx) : a(a), b(b), c(c), normal(normal), objectIndex(objectIdx) {};
 };
 
 struct GPUObject { // 64 bytes

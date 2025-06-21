@@ -47,10 +47,23 @@ void Scene::InitLights() {
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, LIGHTS_BINDING, ssbo_lights);
 }
 
+void Scene::InitObjects() {
+	glGenBuffers(1, &ssbo_objects);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_objects);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, 0, nullptr, GL_STATIC_DRAW);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, OBJECTS_BINDING, ssbo_objects);
+
+	glGenBuffers(1, &ssbo_triangles);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_triangles);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, 0, nullptr, GL_STATIC_DRAW);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, TRIANGLES_BINDING, ssbo_triangles);
+}
+
 void Scene::InitScene() {
 	InitCamera();
 	InitLights();
 	InitSpheres();
+	InitObjects();
 }
 
 Scene::Scene(Shader shader) : shader(shader) {
@@ -79,6 +92,7 @@ void Scene::UpdateCamera(Camera &camera) {
 	glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(GPUCamera), &camData);
 }
 
+//Avoid Calling these update functions in program loop(exception UpdateCamera()) for now
 void Scene::UpdateLights(const std::vector<Light>& lights) {
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_lights);
 	std::vector<GPULight> gpuLights;
@@ -91,11 +105,11 @@ void Scene::UpdateLights(const std::vector<Light>& lights) {
 }
 
 void Scene::UpdateSpheres(const std::vector<Sphere>& spheres) {
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_spheres);
 	std::vector<GPUSphere> gpuSpheres;
 	for (const Sphere& sphere : spheres) {
 		gpuSpheres.push_back(GPUSphere(sphere.position, sphere.radius, GPUMaterial(sphere.material.color, sphere.material.roughness, sphere.material.emits, sphere.material.emissionStrength)));
 	}
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_spheres);
 	glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(GPUSphere) * gpuSpheres.size(), gpuSpheres.data(), GL_STATIC_DRAW);
 }
 
@@ -106,19 +120,27 @@ void Scene::Delete() {
 }
 
 void Scene::UpdateObjects(const std::vector<Object>& objects) {
-	//TODO: load the following data to gpu buffer
 	std::vector<GPUObject> gpuObjects;
 	std::vector<GPUTriangle> gpuTriangles;
 
+	//TODO: Add the positions of triangles accoding to the position of parent object
+
 	int trigStartIdx = 0;
+	int netTriangles = 0;
 	for (int o = 0; o < objects.size(); o++) {
 		for (const Triangle& trig : objects[o].triangles) {
 			gpuTriangles.push_back(GPUTriangle(trig.a, trig.b, trig.c, trig.normal, o));
+			netTriangles++;
 		}
 		int t = objects[o].triangles.size();
 		gpuObjects.push_back(GPUObject(objects[o].position, objects[o].scale, trigStartIdx, t, GPUMaterial(objects[o].material.color, objects[o].material.roughness, objects[o].material.emits, objects[o].material.emissionStrength)));
 		trigStartIdx += t;
 	}
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_objects);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(GPUObject) * gpuObjects.size(), gpuObjects.data(), GL_STATIC_DRAW);
+
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_triangles);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(GPUTriangle) * netTriangles, gpuTriangles.data(), GL_STATIC_DRAW);
 }
 
 Material::Material(glm::vec3 color, float roughness){
@@ -143,7 +165,7 @@ Triangle::Triangle(glm::vec3 a, glm::vec3 b, glm::vec3 c) {
 }
 
 glm::vec3 Triangle::CalculateNormal() {
-	return glm::normalize(glm::cross(a, b));
+	return glm::normalize(glm::cross(b-a, c-a));
 }
 
 

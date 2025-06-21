@@ -76,8 +76,10 @@ public:
 	void InitCamera();
 	void InitLights();
 	void InitSpheres();
+	void InitObjects();
 
 	//All of these functions send data to the GPU
+	//Avoid Calling these functions in program loop(exception UpdateCamera()) for now
 	void UpdateSpheres(const std::vector<Sphere> &spheres);
 	void UpdateCamera(Camera &camera);
 	void UpdateLights(const std::vector<Light>& lights);

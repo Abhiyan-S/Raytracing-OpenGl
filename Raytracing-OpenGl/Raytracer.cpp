@@ -53,7 +53,7 @@ int main(int argc, char* argv[]) {
 	Shader shader("Shaders/QuadVertexShader.vs", "Shaders/QuadFragShader.fs");
 	int resLoc = glGetUniformLocation(shader.ID, "resolution");
 
-	Camera camera(glm::vec3(0, 0, 0), glm::vec3(0, 0, 1), 60, 5, width / (float)height);
+	Camera camera(glm::vec3(5, 5, 15), glm::vec3(0, 0, -1), 60, 5, width / (float)height);
 
 	Scene scene(shader);
 	scene.UpdateCamera(camera);
@@ -75,16 +75,22 @@ int main(int argc, char* argv[]) {
 
 	spheres[3].material.emits = true;
 	spheres[3].material.emissionStrength = 4;
-	spheres[3].material.color = glm::vec3(0.1, 1, 0.1);
+	spheres[3].material.color = glm::vec3(0.1, 0.1, 1);
 
 	GLuint ssbo_lights;
 	std::vector<Light> lights = {
-									Light(glm::vec3(7,5,2), glm::vec3(1,1,1),0.25),
-									Light(glm::vec3(2,5,8), glm::vec3(1,0.4,0.3),0.25)
+									Light(glm::vec3(7,5,2), glm::vec3(1,1,1),0),
+									//Light(glm::vec3(2,5,8), glm::vec3(0,0.4,0.3),0.25)
 								   };
+
+	std::vector<Object> objects = {
+									Object(glm::vec3(0,0,0), 1)
+	};
+	objects[0].AddTriangle(Triangle(glm::vec3(-10, 10, 0), glm::vec3(0, 10, 10), glm::vec3(10, 10, 10)));
 
 	scene.UpdateSpheres(spheres);
 	scene.UpdateLights(lights);
+	scene.UpdateObjects(objects);
 
 	float time = 0;
 	float dt = 0;
