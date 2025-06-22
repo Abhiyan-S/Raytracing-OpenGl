@@ -38,6 +38,10 @@
     <None Include="Shaders\QuadVertexShader.vs">
       <Filter>Resource Files\Shaders</Filter>
     </None>
+    <None Include="Shaders\AccumShader.fs">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="Shaders\DisplayShader.fs" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Shaders\Shader.h">

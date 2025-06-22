@@ -122,7 +122,7 @@ HitInfo TraceObject(Ray ray, int oIdx){
 			closestHitInfo.didHit = true;
 			closestHitInfo.distance = d;
 			closestHitInfo.point = ray.origin + ray.dir * d;
-			closestHitInfo.normal = normalize(tri.normal);
+			closestHitInfo.normal = tri.normal;
 			closestHitInfo.material = objects[oIdx].material;
 		}
 	}
@@ -168,7 +168,7 @@ HitInfo TraceSphere(Ray ray, int sIdx){
 	return hit;
 }
 vec3 GetLight(vec3 point, vec3 normal){
-	vec3 currentColor = vec3(0.1,0.16,0.18);
+	vec3 currentColor = vec3(0,0,0);
 	Ray ray;
 	ray.origin = point;
 	for(int l = 0; l<lights.length(); l++){
@@ -203,7 +203,7 @@ vec3 GetLight(vec3 point, vec3 normal){
 
 float Random() {
 	vec2 co = gl_FragCoord.xy;
-	fSeed++;
+	fSeed+=0.1;
     return fract(sin(dot(co, vec2(12.9898, 78.233)) +fSeed + frameSeed) * 43758.5453);
 }
 
@@ -223,7 +223,7 @@ HitInfo TracePath(Ray ray){
 	for(int i = 0; i < spheres.length(); i++){
 		HitInfo hit = TraceSphere(ray, i);
 		if(hit.didHit){
-			if(hit.distance > 0.0001 && hit.distance < closestHitInfo.distance){
+			if(hit.distance > 0.01 && hit.distance < closestHitInfo.distance){
 				closestHitInfo = hit;
 			}
 		}
@@ -231,7 +231,7 @@ HitInfo TracePath(Ray ray){
 	for(int o = 0; o<objects.length(); o++){
 		HitInfo hit = TraceObject(ray, o);
 		if(hit.didHit){
-			if(hit.distance > 0.0001 && hit.distance < closestHitInfo.distance){
+			if(hit.distance > 0.01 && hit.distance < closestHitInfo.distance){
 				closestHitInfo = hit;
 			}
 		}

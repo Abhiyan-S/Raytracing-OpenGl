@@ -129,7 +129,7 @@ void Scene::UpdateObjects(const std::vector<Object>& objects) {
 	int netTriangles = 0;
 	for (int o = 0; o < objects.size(); o++) {
 		for (const Triangle& trig : objects[o].triangles) {
-			gpuTriangles.push_back(GPUTriangle(trig.a, trig.b, trig.c, trig.normal, o));
+			gpuTriangles.push_back(GPUTriangle((trig.a * objects[o].scale) + objects[o].position, (trig.b * objects[o].scale) + objects[o].position, (trig.c * objects[o].scale) + objects[o].position, trig.normal, o));
 			netTriangles++;
 		}
 		int t = objects[o].triangles.size();
