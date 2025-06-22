@@ -139,6 +139,8 @@
     <ClCompile Include="Shaders\Shader.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Shaders\AccumShader.fs" />
+    <None Include="Shaders\DisplayShader.fs" />
     <None Include="Shaders\QuadFragShader.fs" />
     <None Include="Shaders\QuadVertexShader.vs" />
   </ItemGroup>
