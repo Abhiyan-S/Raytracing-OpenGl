@@ -12,7 +12,7 @@ bool running = true;
 int width = 800, height = 600;
 
 void CreateScreenQuad(GLuint *vao, GLuint *vbo) {
-	std::cout << "Press up arrow and down arrow if the screen appears black initially\n";
+	std::cout << "Press up arrow and right arrow if the screen appears black initially\n";
 	float verts[] = {
 		-1,1, 0, 1,
 		 1,1, 1, 1,
@@ -111,7 +111,7 @@ int main(int argc, char* argv[]) {
 
 	GLuint ssbo_lights;
 	std::vector<Light> lights = {
-									Light(glm::vec3(7,5,2), glm::vec3(1,1,1),0.25),
+									Light(glm::vec3(7,5,2), glm::vec3(1,1,1),0.5),
 									Light(glm::vec3(2,5,8), glm::vec3(0,0.4,0.3),0.25)
 								   };
 
@@ -119,7 +119,7 @@ int main(int argc, char* argv[]) {
 									Object(glm::vec3(0,0,0), 1)
 	};
 	objects[0].AddTriangle(Triangle(glm::vec3(-10, 10, 0), glm::vec3(0, 10, 10), glm::vec3(10, 10, 10)));
-	objects[0].material.color = glm::vec3(1, 0.1, 0.1);
+	objects[0].material.color = glm::vec3(1, 1, 1);
 
 	scene.UpdateSpheres(spheres);
 	scene.UpdateLights(lights);
