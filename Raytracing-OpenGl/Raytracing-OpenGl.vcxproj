@@ -155,6 +155,7 @@
     <ClCompile Include="imgui\imgui_widgets.cpp" />
     <ClCompile Include="Objects.cpp" />
     <ClCompile Include="Raytracer.cpp" />
+    <ClCompile Include="Scene.cpp" />
     <ClCompile Include="Shaders\Shader.cpp" />
   </ItemGroup>
   <ItemGroup>

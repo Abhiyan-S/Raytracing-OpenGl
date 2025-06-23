@@ -5,6 +5,7 @@
 class Camera {
 public:
 	float speed = 10;
+	float sensitivity = 0.001;
 	glm::vec3 position;
 	glm::vec3 dir;
 	glm::vec3 up;
@@ -63,28 +64,3 @@ public:
 	}
 };
 
-class Scene {
-public:
-	Shader shader;
-	GLuint ubo_cam;
-	GLuint ssbo_lights;
-	GLuint ssbo_spheres;
-	GLuint ssbo_objects;
-	GLuint ssbo_triangles;
-
-	Scene(Shader shader);
-	void InitScene();
-	void InitCamera();
-	void InitLights();
-	void InitSpheres();
-	void InitObjects();
-
-	//All of these functions send data to the GPU
-	//Avoid Calling these functions in program loop(exception UpdateCamera()) for now
-	void UpdateSpheres(const std::vector<Sphere> &spheres);
-	void UpdateCamera(Camera &camera);
-	void UpdateLights(const std::vector<Light>& lights);
-	void UpdateObjects(const std::vector<Object>& objects);
-
-	void Delete();
-};

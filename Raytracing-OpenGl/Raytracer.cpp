@@ -3,12 +3,14 @@
 #include<SDL.h>
 #include<glad/glad.h>
 #include "Shaders/Shader.h"
+#include "Scene.h"
 #include<glm/glm.hpp>
 #include<glm/gtc/matrix_transform.hpp>
 #include "Objects.h"
 #include<vector>
 #include<iostream>
 #include<chrono>
+#include<string>
 
 #include "imgui.h"
 #include "backends/imgui_impl_sdl2.h"
@@ -94,6 +96,10 @@ void HandleCameraMovement(const Uint8* keystate, Camera* camera) {
 	if (keystate[SDL_SCANCODE_E]) camera->position += camera->up * camera->speed * dt;
 }
 
+void HandleMouseMotion(float dx, float dy, Camera *camera) {
+	camera->dir = glm::normalize(camera->dir + camera->right * dx * camera->sensitivity - camera->up * dy * camera->sensitivity);
+}
+
 int main(int argc, char* argv[]) {
 	SDL_Init(SDL_INIT_VIDEO);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
@@ -121,6 +127,7 @@ int main(int argc, char* argv[]) {
 
 	Camera camera(glm::vec3(5, 5, 15), glm::vec3(0, 0, -1), 60, 5, width / (float)height);
 	camera.speed = 10;
+	camera.sensitivity = 0.001;
 
 	Scene scene(shader);
 	scene.UpdateCamera(camera);
@@ -168,28 +175,25 @@ int main(int argc, char* argv[]) {
 	}
 
 	float time = 0;
-	float fpsTimer = 0;
 
 	int frameCount = 1;
 	int current = 0, next = 1;
 
 	const Uint8* keystate = SDL_GetKeyboardState(NULL);
 	
+	RenderMode renderMode = NORMAL;
 
 	GLuint seedLoc = glGetUniformLocation(shader.ID, "frameSeed");
 	GLuint samplesLoc = glGetUniformLocation(shader.ID, "SAMPLES");
 	GLuint bouncesLoc = glGetUniformLocation(shader.ID, "BOUNCES");
 	int bounces = 5;
 	int samples = 5;
-	
-	float speed = 8;
-	float sensitivity = 0.001;
 
 	bool mouseLocked = false;
 
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
-	ImGui::StyleColorsDark();
+
 	ImGui_ImplSDL2_InitForOpenGL(window, context);
 	ImGui_ImplOpenGL3_Init("#version 430");
 
@@ -210,10 +214,7 @@ int main(int argc, char* argv[]) {
 				ResetTextures(accumTex, &frameCount);
 			}
 			if (event.type == SDL_MOUSEMOTION) {
-				float dx = event.motion.xrel;
-				float dy = event.motion.yrel;
-
-				camera.dir = glm::normalize(camera.dir + camera.right * dx * sensitivity - camera.up * dy * sensitivity);
+				HandleMouseMotion(event.motion.xrel, event.motion.yrel, &camera);
 				ResetTextures(accumTex, &frameCount);
 			}
 			if (event.type == SDL_KEYUP) {
@@ -227,7 +228,14 @@ int main(int argc, char* argv[]) {
 		ImGui_ImplSDL2_NewFrame();
 		ImGui::NewFrame();
 
-		ImGui::Begin("Help!");
+		ImGui::Begin("GUI:");
+		if (ImGui::Button("Toggle Raytracing")) {
+			if (renderMode == NORMAL) renderMode = RAYTRACING; else renderMode = NORMAL;
+			
+		}
+		std::string fps_string = std::string("FPS: ") + std::to_string(1/dt);
+		ImGui::Text( fps_string.c_str());
+
 		ImGui::Text("Press LCTRL to toggle mouse lock");
 		ImGui::End();
 
@@ -288,10 +296,6 @@ int main(int argc, char* argv[]) {
 		auto end = std::chrono::high_resolution_clock::now();
 		dt = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count()/1000000.0;
 		time += dt;
-		if (time - fpsTimer > 3) {
-			fpsTimer = time;
-			std::cout << "FPS: " << 1 / dt << "\n";
-		}
 	}
 	scene.Delete();
 	SDL_DestroyWindow(window);
