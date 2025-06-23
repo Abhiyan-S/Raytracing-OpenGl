@@ -4,6 +4,7 @@
 #include "Shaders/Shader.h"
 class Camera {
 public:
+	float speed = 10;
 	glm::vec3 position;
 	glm::vec3 dir;
 	glm::vec3 up;

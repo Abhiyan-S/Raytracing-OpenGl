@@ -1,3 +1,5 @@
+#define IMGUI_IMPL_OPENGL_LOADER_GLAD
+
 #include<SDL.h>
 #include<glad/glad.h>
 #include "Shaders/Shader.h"
@@ -8,8 +10,17 @@
 #include<iostream>
 #include<chrono>
 
+#include "imgui.h"
+#include "backends/imgui_impl_sdl2.h"
+#include "backends/imgui_impl_opengl3.h"
+
 bool running = true;
 int width = 800, height = 600;
+float dt=0;
+
+enum RenderMode {
+	RAYTRACING, NORMAL
+};
 
 void CreateScreenQuad(GLuint *vao, GLuint *vbo) {
 	std::cout << "Press up arrow and right arrow if the screen appears black initially\n";
@@ -57,9 +68,6 @@ std::vector<Sphere> SetSpheres() {
 	return spheres;
 }
 
-void SetFrameBuffers(GLuint sceneFBO, GLuint *sceneTex) {
-
-}
 
 void ClearTexture(GLuint texture) {
 	GLuint tempFBO;
@@ -75,6 +83,15 @@ void ResetTextures(GLuint accumTex[], int *frameCount) {
 	*frameCount = 1;
 	ClearTexture(accumTex[0]);
 	ClearTexture(accumTex[1]);
+}
+
+void HandleCameraMovement(const Uint8* keystate, Camera* camera) {
+	if (keystate[SDL_SCANCODE_W]) camera->position += camera->dir * camera->speed * dt;
+	if (keystate[SDL_SCANCODE_S]) camera->position -= camera->dir * camera->speed * dt;
+	if (keystate[SDL_SCANCODE_A]) camera->position -= camera->right * camera->speed * dt;
+	if (keystate[SDL_SCANCODE_D]) camera->position += camera->right * camera->speed * dt;
+	if (keystate[SDL_SCANCODE_Q]) camera->position -= camera->up * camera->speed * dt;
+	if (keystate[SDL_SCANCODE_E]) camera->position += camera->up * camera->speed * dt;
 }
 
 int main(int argc, char* argv[]) {
@@ -103,6 +120,7 @@ int main(int argc, char* argv[]) {
 	int resLoc = glGetUniformLocation(shader.ID, "resolution");
 
 	Camera camera(glm::vec3(5, 5, 15), glm::vec3(0, 0, -1), 60, 5, width / (float)height);
+	camera.speed = 10;
 
 	Scene scene(shader);
 	scene.UpdateCamera(camera);
@@ -150,15 +168,13 @@ int main(int argc, char* argv[]) {
 	}
 
 	float time = 0;
-	float dt = 0;
-
 	float fpsTimer = 0;
 
 	int frameCount = 1;
 	int current = 0, next = 1;
 
 	const Uint8* keystate = SDL_GetKeyboardState(NULL);
-	SDL_SetRelativeMouseMode(SDL_TRUE);
+	
 
 	GLuint seedLoc = glGetUniformLocation(shader.ID, "frameSeed");
 	GLuint samplesLoc = glGetUniformLocation(shader.ID, "SAMPLES");
@@ -169,9 +185,18 @@ int main(int argc, char* argv[]) {
 	float speed = 8;
 	float sensitivity = 0.001;
 
+	bool mouseLocked = false;
+
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	ImGui::StyleColorsDark();
+	ImGui_ImplSDL2_InitForOpenGL(window, context);
+	ImGui_ImplOpenGL3_Init("#version 430");
+
 	while (running) {
 		auto start = std::chrono::high_resolution_clock::now();
 		while (SDL_PollEvent(&event)) {
+			ImGui_ImplSDL2_ProcessEvent(&event);
 			if (event.type == SDL_QUIT) running = false;
 			if (event.type == SDL_KEYDOWN) {
 				if (event.key.keysym.sym == SDLK_ESCAPE) running = false;
@@ -180,6 +205,8 @@ int main(int argc, char* argv[]) {
 
 				if (event.key.keysym.sym == SDLK_UP) { bounces += 1; glUniform1i(bouncesLoc, bounces); std::cout << "Bounces set to " << bounces << "\n"; }
 				if (event.key.keysym.sym == SDLK_DOWN) { bounces -= 1; glUniform1i(bouncesLoc, bounces); std::cout << "Bounces set to " << bounces << "\n"; }
+
+				if(event.key.keysym.sym == SDLK_LCTRL) SDL_SetRelativeMouseMode((mouseLocked = !mouseLocked)? SDL_TRUE:SDL_FALSE);
 				ResetTextures(accumTex, &frameCount);
 			}
 			if (event.type == SDL_MOUSEMOTION) {
@@ -193,14 +220,19 @@ int main(int argc, char* argv[]) {
 				ResetTextures(accumTex, &frameCount);
 			}
 		}
-		if (keystate[SDL_SCANCODE_W]) camera.position += camera.dir * speed * dt;
-		if (keystate[SDL_SCANCODE_S]) camera.position -= camera.dir * speed * dt;
-		if (keystate[SDL_SCANCODE_A]) camera.position -= camera.right * speed * dt;
-		if (keystate[SDL_SCANCODE_D]) camera.position += camera.right * speed * dt;
-		if (keystate[SDL_SCANCODE_Q]) camera.position -= camera.up * speed * dt;
-		if (keystate[SDL_SCANCODE_E]) camera.position += camera.up * speed * dt;
-		
+		HandleCameraMovement(keystate, &camera);
 		scene.UpdateCamera(camera);
+		
+		ImGui_ImplOpenGL3_NewFrame();
+		ImGui_ImplSDL2_NewFrame();
+		ImGui::NewFrame();
+
+		ImGui::Begin("Help!");
+		ImGui::Text("Press LCTRL to toggle mouse lock");
+		ImGui::End();
+
+		ImGui::Render();
+		
 		glClearColor(0, 0, 0, 1);
 
 		glBindFramebuffer(GL_FRAMEBUFFER, sceneFBO);
@@ -249,7 +281,10 @@ int main(int argc, char* argv[]) {
 		std::swap(current, next);
 		frameCount++;
 		
+		ImGui::Render();
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 		SDL_GL_SwapWindow(window);
+
 		auto end = std::chrono::high_resolution_clock::now();
 		dt = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count()/1000000.0;
 		time += dt;
