@@ -169,6 +169,7 @@
   <ItemGroup>
     <ClInclude Include="GPUStructs.h" />
     <ClInclude Include="Objects.h" />
+    <ClInclude Include="Scene.h" />
     <ClInclude Include="Shaders\Shader.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

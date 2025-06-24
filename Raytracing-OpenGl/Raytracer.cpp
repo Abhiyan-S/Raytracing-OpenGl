@@ -103,7 +103,52 @@ void GenerateGUI() {
 
 }
 
-void RenderRaytracing() {
+void RenderRaytracing(Scene &scene, GLuint &vao_quad, int bounces, int samples, int current, int next, int frameCount) {
+	glClearColor(0, 0, 0, 1);
+	glBindFramebuffer(GL_FRAMEBUFFER, scene.sceneFBO);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	scene.raytracingShader.Use();
+
+	glUniform1i(glGetUniformLocation(scene.raytracingShader.ID, "frameSeed"), rand() % 1000);
+	glUniform1i(glGetUniformLocation(scene.raytracingShader.ID, "BOUNCES"), bounces);
+	glUniform1i(glGetUniformLocation(scene.raytracingShader.ID, "SAMPLES"), samples);
+	glUniform2f(glGetUniformLocation(scene.raytracingShader.ID, "resolution"), width, height);
+
+	glBindVertexArray(vao_quad);
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, scene.accumFBO[next]);
+	glClear(GL_COLOR_BUFFER_BIT);
+	scene.accumShader.Use();
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, scene.sceneTex);
+	glUniform1i(glGetUniformLocation(scene.accumShader.ID, "currentFrame"), 0);
+
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, scene.accumTex[current]);
+	glUniform1i(glGetUniformLocation(scene.accumShader.ID, "previousAccum"), 1);
+
+	float blendFactor = 1.0f / frameCount;
+	glUniform1f(glGetUniformLocation(scene.accumShader.ID, "blendFactor"), blendFactor);
+
+	glBindVertexArray(vao_quad);
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	scene.displayShader.Use();
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, scene.accumTex[next]);
+	glUniform1i(glGetUniformLocation(scene.displayShader.ID, "image"), 0);
+
+	glBindVertexArray(vao_quad);
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+}
+
+void RenderBasic() {
 
 }
 
@@ -167,9 +212,6 @@ int main(int argc, char* argv[]) {
 	
 	RenderMode renderMode = RAYTRACING;
 
-	GLuint seedLoc = glGetUniformLocation(scene.raytracingShader.ID, "frameSeed");
-	GLuint samplesLoc = glGetUniformLocation(scene.raytracingShader.ID, "SAMPLES");
-	GLuint bouncesLoc = glGetUniformLocation(scene.raytracingShader.ID, "BOUNCES");
 	int bounces = 5;
 	int samples = 5;
 
@@ -188,21 +230,21 @@ int main(int argc, char* argv[]) {
 			if (event.type == SDL_QUIT) running = false;
 			if (event.type == SDL_KEYDOWN) {
 				if (event.key.keysym.sym == SDLK_ESCAPE) running = false;
-				if (event.key.keysym.sym == SDLK_RIGHT) { samples += 1; glUniform1i(samplesLoc, samples); std::cout << "Samples set to "<<samples<<"\n"; }
-				if (event.key.keysym.sym == SDLK_LEFT) { samples -= 1; glUniform1i(samplesLoc, samples); std::cout << "Samples set to " << samples << "\n"; }
+				if (event.key.keysym.sym == SDLK_RIGHT) { samples += 1; std::cout << "Samples set to "<<samples<<"\n"; }
+				if (event.key.keysym.sym == SDLK_LEFT) { samples -= 1; std::cout << "Samples set to " << samples << "\n"; }
 
-				if (event.key.keysym.sym == SDLK_UP) { bounces += 1; glUniform1i(bouncesLoc, bounces); std::cout << "Bounces set to " << bounces << "\n"; }
-				if (event.key.keysym.sym == SDLK_DOWN) { bounces -= 1; glUniform1i(bouncesLoc, bounces); std::cout << "Bounces set to " << bounces << "\n"; }
+				if (event.key.keysym.sym == SDLK_UP) { bounces += 1; std::cout << "Bounces set to " << bounces << "\n"; }
+				if (event.key.keysym.sym == SDLK_DOWN) { bounces -= 1; std::cout << "Bounces set to " << bounces << "\n"; }
 
 				if(event.key.keysym.sym == SDLK_LCTRL) SDL_SetRelativeMouseMode((mouseLocked = !mouseLocked)? SDL_TRUE:SDL_FALSE);
 				ResetTextures(scene.accumTex, &frameCount);
 			}
 			if (event.type == SDL_MOUSEMOTION) {
 				HandleMouseMotion(event.motion.xrel, event.motion.yrel, &camera);
-				ResetTextures(scene.accumTex, &frameCount);
+				if(renderMode == RAYTRACING) ResetTextures(scene.accumTex, &frameCount);
 			}
 			if (event.type == SDL_KEYUP) {
-				ResetTextures(scene.accumTex, &frameCount);
+				if (renderMode == RAYTRACING) ResetTextures(scene.accumTex, &frameCount);
 			}
 		}
 		HandleCameraMovement(keystate, &camera);
@@ -224,49 +266,14 @@ int main(int argc, char* argv[]) {
 		ImGui::End();
 
 		ImGui::Render();
-		
-		glClearColor(0, 0, 0, 1);
-		glBindFramebuffer(GL_FRAMEBUFFER, scene.sceneFBO);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		scene.raytracingShader.Use();
-
-		glUniform1i(seedLoc, rand() % 1000);
-		glUniform1i(bouncesLoc, bounces);
-		glUniform1i(samplesLoc, samples);
-		glUniform2f(resLoc, width, height);
-		glBindVertexArray(vao_quad);
-		glDrawArrays(GL_TRIANGLES, 0, 6);
-
-		glBindFramebuffer(GL_FRAMEBUFFER, scene.accumFBO[next]);
 		glClear(GL_COLOR_BUFFER_BIT);
-		scene.accumShader.Use();
-
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, scene.sceneTex);
-		glUniform1i(glGetUniformLocation(scene.accumShader.ID, "currentFrame"), 0);
-
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, scene.accumTex[current]);
-		glUniform1i(glGetUniformLocation(scene.accumShader.ID, "previousAccum"), 1);
-
-		float blendFactor = 1.0f / frameCount;
-		glUniform1f(glGetUniformLocation(scene.accumShader.ID, "blendFactor"), blendFactor);
-
-		glBindVertexArray(vao_quad);
-		glDrawArrays(GL_TRIANGLES, 0, 6);
-
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		glClear(GL_COLOR_BUFFER_BIT);
-
-		scene.displayShader.Use();
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, scene.accumTex[next]);
-		glUniform1i(glGetUniformLocation(scene.displayShader.ID, "image"), 0);
-
-		glBindVertexArray(vao_quad);
-		glDrawArrays(GL_TRIANGLES, 0, 6);
-		
+		if (renderMode == RAYTRACING) {
+			RenderRaytracing(scene, vao_quad, bounces, samples, current, next, frameCount);
+		}
+		else {
+			RenderBasic();
+		}
 
 		std::swap(current, next);
 		frameCount++;
@@ -279,7 +286,7 @@ int main(int argc, char* argv[]) {
 		dt = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count()/1000000.0;
 		time += dt;
 	}
-	scene.Delete();
+	scene.Delete(spheres);
 	SDL_DestroyWindow(window);
 	SDL_GL_DeleteContext(context);
 	SDL_Quit();

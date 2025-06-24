@@ -34,5 +34,5 @@ public:
 	void UpdateLights(const std::vector<Light>& lights);
 	void UpdateObjects(const std::vector<Object>& objects);
 
-	void Delete();
+	void Delete(std::vector<Sphere> &spheres);
 };
