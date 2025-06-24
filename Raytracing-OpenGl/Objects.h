@@ -32,7 +32,10 @@ public:
 	glm::vec3 position;
 	float radius;
 	Material material;
-	Sphere(glm::vec3 pos, float r) : position(pos), radius(r) {};
+
+	GLuint VAO, VBO;
+	Sphere(glm::vec3 pos, float r);
+	void ConstructSphere();
 };
 
 class Light {

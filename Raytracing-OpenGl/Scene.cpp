@@ -45,6 +45,11 @@ void Scene::InitObjects() {
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, TRIANGLES_BINDING, ssbo_triangles);
 }
 
+
+void Scene::InitFrameAccumulation() {
+
+}
+
 void Scene::InitScene() {
 	InitCamera();
 	InitLights();
@@ -108,8 +113,6 @@ void Scene::Delete() {
 void Scene::UpdateObjects(const std::vector<Object>& objects) {
 	std::vector<GPUObject> gpuObjects;
 	std::vector<GPUTriangle> gpuTriangles;
-
-	//TODO: Add the positions of triangles accoding to the position of parent object
 
 	int trigStartIdx = 0;
 	int netTriangles = 0;

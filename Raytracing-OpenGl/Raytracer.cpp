@@ -25,7 +25,6 @@ enum RenderMode {
 };
 
 void CreateScreenQuad(GLuint *vao, GLuint *vbo) {
-	std::cout << "Press up arrow and right arrow if the screen appears black initially\n";
 	float verts[] = {
 		-1,1, 0, 1,
 		 1,1, 1, 1,
@@ -98,6 +97,10 @@ void HandleCameraMovement(const Uint8* keystate, Camera* camera) {
 
 void HandleMouseMotion(float dx, float dy, Camera *camera) {
 	camera->dir = glm::normalize(camera->dir + camera->right * dx * camera->sensitivity - camera->up * dy * camera->sensitivity);
+}
+
+void GenerateGUI() {
+
 }
 
 int main(int argc, char* argv[]) {

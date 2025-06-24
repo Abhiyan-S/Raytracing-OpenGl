@@ -19,6 +19,7 @@ public:
 	void InitLights();
 	void InitSpheres();
 	void InitObjects();
+	void InitFrameAccumulation();
 
 	//All of these functions send data to the GPU
 	//Avoid Calling these functions in program loop(exception UpdateCamera()) for now
