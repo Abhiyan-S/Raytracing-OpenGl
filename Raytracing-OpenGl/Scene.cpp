@@ -15,8 +15,8 @@ void Scene::InitCamera() {
 	glBufferData(GL_UNIFORM_BUFFER, sizeof(GPUCamera), NULL, GL_STATIC_DRAW);
 	glBindBufferBase(GL_UNIFORM_BUFFER, CAMERA_BINDING, ubo_cam);
 
-	GLuint blockIndex = glGetUniformBlockIndex(this->shader.ID, "Camera");
-	glUniformBlockBinding(this->shader.ID, blockIndex, CAMERA_BINDING);
+	GLuint blockIndex = glGetUniformBlockIndex(this->raytracingShader.ID, "Camera");
+	glUniformBlockBinding(this->raytracingShader.ID, blockIndex, CAMERA_BINDING);
 }
 
 void Scene::InitSpheres() {
@@ -46,19 +46,41 @@ void Scene::InitObjects() {
 }
 
 
-void Scene::InitFrameAccumulation() {
+void Scene::InitFrameAccumulation(int width, int height) {
+	glGenFramebuffers(1, &sceneFBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, sceneFBO);
 
+	glGenTextures(1, &sceneTex);
+	glBindTexture(GL_TEXTURE_2D, sceneTex);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, sceneTex, 0);
+
+
+	glGenFramebuffers(2, accumFBO);
+	glGenTextures(2, accumTex);
+
+	for (int i = 0; i < 2; i++) {
+		glBindFramebuffer(GL_FRAMEBUFFER, accumFBO[i]);
+		glBindTexture(GL_TEXTURE_2D, accumTex[i]);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, accumTex[i], 0);
+	}
 }
 
-void Scene::InitScene() {
+void Scene::InitScene(int width, int height) {
 	InitCamera();
 	InitLights();
 	InitSpheres();
 	InitObjects();
+	InitFrameAccumulation(width, height);
 }
 
-Scene::Scene(Shader shader) : shader(shader) {
-	InitScene();
+Scene::Scene(int width, int height, Shader raytracingShader, Shader accumShader, Shader displayShader) : raytracingShader(raytracingShader), accumShader(accumShader), displayShader(displayShader) {
+	InitScene(width, height);
 }
 
 

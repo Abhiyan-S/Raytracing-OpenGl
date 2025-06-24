@@ -103,6 +103,10 @@ void GenerateGUI() {
 
 }
 
+void RenderRaytracing() {
+
+}
+
 int main(int argc, char* argv[]) {
 	SDL_Init(SDL_INIT_VIDEO);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
@@ -122,17 +126,18 @@ int main(int argc, char* argv[]) {
 	const GLubyte* version = glGetString(GL_VERSION);
 	std::cout << "OpenGL version: " << version << std::endl;
 
-	Shader shader("Shaders/QuadVertexShader.vs", "Shaders/QuadFragShader.fs");
+	Shader raytracingShader("Shaders/QuadVertexShader.vs", "Shaders/QuadFragShader.fs");
 	Shader accumShader("Shaders/QuadVertexShader.vs", "Shaders/AccumShader.fs");
 	Shader displayShader("Shaders/QuadVertexShader.vs", "Shaders/DisplayShader.fs");
 
-	int resLoc = glGetUniformLocation(shader.ID, "resolution");
+	int resLoc = glGetUniformLocation(raytracingShader.ID, "resolution");
 
 	Camera camera(glm::vec3(5, 5, 15), glm::vec3(0, 0, -1), 60, 5, width / (float)height);
 	camera.speed = 10;
 	camera.sensitivity = 0.001;
+	camera.resolution = glm::vec2(width, height);
 
-	Scene scene(shader);
+	Scene scene(width, height, raytracingShader, accumShader, displayShader);
 	scene.UpdateCamera(camera);
 
 	std::vector<Sphere> spheres = SetSpheres();
@@ -153,30 +158,6 @@ int main(int argc, char* argv[]) {
 	scene.UpdateLights(lights);
 	scene.UpdateObjects(objects);
 
-	GLuint sceneFBO, sceneTex;
-	glGenFramebuffers(1, &sceneFBO);
-	glBindFramebuffer(GL_FRAMEBUFFER, sceneFBO);
-
-	glGenTextures(1, &sceneTex);
-	glBindTexture(GL_TEXTURE_2D, sceneTex);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, sceneTex, 0);
-
-	GLuint accumFBO[2], accumTex[2];
-	glGenFramebuffers(2, accumFBO);
-	glGenTextures(2, accumTex);
-
-	for (int i = 0; i < 2; i++) {
-		glBindFramebuffer(GL_FRAMEBUFFER, accumFBO[i]);
-		glBindTexture(GL_TEXTURE_2D, accumTex[i]);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, accumTex[i], 0);
-	}
-
 	float time = 0;
 
 	int frameCount = 1;
@@ -184,11 +165,11 @@ int main(int argc, char* argv[]) {
 
 	const Uint8* keystate = SDL_GetKeyboardState(NULL);
 	
-	RenderMode renderMode = NORMAL;
+	RenderMode renderMode = RAYTRACING;
 
-	GLuint seedLoc = glGetUniformLocation(shader.ID, "frameSeed");
-	GLuint samplesLoc = glGetUniformLocation(shader.ID, "SAMPLES");
-	GLuint bouncesLoc = glGetUniformLocation(shader.ID, "BOUNCES");
+	GLuint seedLoc = glGetUniformLocation(scene.raytracingShader.ID, "frameSeed");
+	GLuint samplesLoc = glGetUniformLocation(scene.raytracingShader.ID, "SAMPLES");
+	GLuint bouncesLoc = glGetUniformLocation(scene.raytracingShader.ID, "BOUNCES");
 	int bounces = 5;
 	int samples = 5;
 
@@ -214,14 +195,14 @@ int main(int argc, char* argv[]) {
 				if (event.key.keysym.sym == SDLK_DOWN) { bounces -= 1; glUniform1i(bouncesLoc, bounces); std::cout << "Bounces set to " << bounces << "\n"; }
 
 				if(event.key.keysym.sym == SDLK_LCTRL) SDL_SetRelativeMouseMode((mouseLocked = !mouseLocked)? SDL_TRUE:SDL_FALSE);
-				ResetTextures(accumTex, &frameCount);
+				ResetTextures(scene.accumTex, &frameCount);
 			}
 			if (event.type == SDL_MOUSEMOTION) {
 				HandleMouseMotion(event.motion.xrel, event.motion.yrel, &camera);
-				ResetTextures(accumTex, &frameCount);
+				ResetTextures(scene.accumTex, &frameCount);
 			}
 			if (event.type == SDL_KEYUP) {
-				ResetTextures(accumTex, &frameCount);
+				ResetTextures(scene.accumTex, &frameCount);
 			}
 		}
 		HandleCameraMovement(keystate, &camera);
@@ -245,34 +226,32 @@ int main(int argc, char* argv[]) {
 		ImGui::Render();
 		
 		glClearColor(0, 0, 0, 1);
-
-		glBindFramebuffer(GL_FRAMEBUFFER, sceneFBO);
+		glBindFramebuffer(GL_FRAMEBUFFER, scene.sceneFBO);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		shader.Use();
-		glUniform1i(seedLoc, rand() % 1000);
-		glUniform1i(samplesLoc, samples);
-		glUniform1i(bouncesLoc, bounces);
+		scene.raytracingShader.Use();
 
-		glBindVertexArray(vao_quad);
+		glUniform1i(seedLoc, rand() % 1000);
+		glUniform1i(bouncesLoc, bounces);
+		glUniform1i(samplesLoc, samples);
 		glUniform2f(resLoc, width, height);
+		glBindVertexArray(vao_quad);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 
-		glBindFramebuffer(GL_FRAMEBUFFER, accumFBO[next]);
+		glBindFramebuffer(GL_FRAMEBUFFER, scene.accumFBO[next]);
 		glClear(GL_COLOR_BUFFER_BIT);
-
-		accumShader.Use();
+		scene.accumShader.Use();
 
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, sceneTex);
-		glUniform1i(glGetUniformLocation(accumShader.ID, "currentFrame"), 0);
+		glBindTexture(GL_TEXTURE_2D, scene.sceneTex);
+		glUniform1i(glGetUniformLocation(scene.accumShader.ID, "currentFrame"), 0);
 
 		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, accumTex[current]);
-		glUniform1i(glGetUniformLocation(accumShader.ID, "previousAccum"), 1);
+		glBindTexture(GL_TEXTURE_2D, scene.accumTex[current]);
+		glUniform1i(glGetUniformLocation(scene.accumShader.ID, "previousAccum"), 1);
 
 		float blendFactor = 1.0f / frameCount;
-		glUniform1f(glGetUniformLocation(accumShader.ID, "blendFactor"), blendFactor);
+		glUniform1f(glGetUniformLocation(scene.accumShader.ID, "blendFactor"), blendFactor);
 
 		glBindVertexArray(vao_quad);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -280,10 +259,10 @@ int main(int argc, char* argv[]) {
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		displayShader.Use();
+		scene.displayShader.Use();
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, accumTex[next]);
-		glUniform1i(glGetUniformLocation(displayShader.ID, "image"), 0);
+		glBindTexture(GL_TEXTURE_2D, scene.accumTex[next]);
+		glUniform1i(glGetUniformLocation(scene.displayShader.ID, "image"), 0);
 
 		glBindVertexArray(vao_quad);
 		glDrawArrays(GL_TRIANGLES, 0, 6);

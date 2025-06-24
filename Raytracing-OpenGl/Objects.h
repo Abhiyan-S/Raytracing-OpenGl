@@ -2,10 +2,12 @@
 #include<glm/glm.hpp>
 #include<vector>
 #include "Shaders/Shader.h"
+#include<glad/glad.h>
 class Camera {
 public:
 	float speed = 10;
 	float sensitivity = 0.001;
+	glm::vec2 resolution;
 	glm::vec3 position;
 	glm::vec3 dir;
 	glm::vec3 up;
@@ -32,7 +34,6 @@ public:
 	glm::vec3 position;
 	float radius;
 	Material material;
-
 	GLuint VAO, VBO;
 	Sphere(glm::vec3 pos, float r);
 	void ConstructSphere();

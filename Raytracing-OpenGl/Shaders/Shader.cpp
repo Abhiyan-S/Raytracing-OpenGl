@@ -29,6 +29,12 @@ Shader::Shader(const char* vertexFilePath, const char* fragmentFilePath) {
 	glShaderSource(vs, 1, &vCode_c, NULL);
 	glCompileShader(vs);
 
+	glGetShaderiv(vs, GL_COMPILE_STATUS, &success);
+	if (!success) {
+		glGetShaderInfoLog(vs, 512, NULL, logInfo);
+		std::cout << "Error compiling vertex shader \n" << logInfo << std::endl;
+	}
+
 	unsigned int fs = glCreateShader(GL_FRAGMENT_SHADER);
 	glShaderSource(fs, 1, &fCode_c, NULL);
 	glCompileShader(fs);

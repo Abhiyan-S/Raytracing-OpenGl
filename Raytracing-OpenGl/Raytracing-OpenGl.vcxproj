@@ -159,6 +159,8 @@
     <ClCompile Include="Shaders\Shader.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="BasicRenderingFragmentShader.fs" />
+    <None Include="BasicRenderingVertexShader.vs" />
     <None Include="Shaders\AccumShader.fs" />
     <None Include="Shaders\DisplayShader.fs" />
     <None Include="Shaders\QuadFragShader.fs" />
