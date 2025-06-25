@@ -159,12 +159,12 @@
     <ClCompile Include="Shaders\Shader.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="BasicRenderingFragmentShader.fs" />
-    <None Include="BasicRenderingVertexShader.vs" />
     <None Include="Shaders\AccumShader.fs" />
-    <None Include="Shaders\DisplayShader.fs" />
+    <None Include="Shaders\BasicRenderingFragmentShader.fs" />
+    <None Include="Shaders\BasicRenderingVertexShader.vs" />
     <None Include="Shaders\QuadFragShader.fs" />
     <None Include="Shaders\QuadVertexShader.vs" />
+    <None Include="TestVertex.vs" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GPUStructs.h" />

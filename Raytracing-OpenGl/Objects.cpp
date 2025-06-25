@@ -28,13 +28,19 @@ Sphere::Sphere(glm::vec3 pos, float r){
 	glGenBuffers(1, &VBO);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
+	ConstructSphere();
+
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
 
 	glEnableVertexAttribArray(0);
-	glEnableVertexAttribArray(0);
-	ConstructSphere();
+	glEnableVertexAttribArray(1);
 	glBindVertexArray(0);
+}
+
+void Sphere::Render() {
+	glBindVertexArray(VAO);
+	glDrawArrays(GL_TRIANGLES, 0, 6 * SPHERE_RESOLUTION * SPHERE_RESOLUTION);
 }
 
 glm::vec3 SphericalToCartesian(float r, float t, float p) {
@@ -47,18 +53,21 @@ glm::vec3 SphericalToCartesian(float r, float t, float p) {
 
 void Sphere::ConstructSphere() {
 	std::vector<float> data;
-	for (int i = 0; i < SPHERE_RESOLUTION; i++) {
-		float theta = (i / SPHERE_RESOLUTION) * PI;
-		float theta1 = ((i + 1) / SPHERE_RESOLUTION) * PI;
-		for (int j = 0; j < SPHERE_RESOLUTION; j++) {
-			float phi = (j / SPHERE_RESOLUTION) * 2 * PI;
-			float phi1 = ((j + 1) / SPHERE_RESOLUTION) * 2 * PI;
+	float res = (float)SPHERE_RESOLUTION;
+	for (int i = 0; i < res; i++) {
+		float theta = (i / res) * PI;
+		float theta1 = ((i + 1) / res) * PI;
+		for (int j = 0; j < res; j++) {
+			float phi = (j / res) * 2 * PI;
+			float phi1 = ((j + 1) / res) * 2 * PI;
 
 			glm::vec3 p0 = SphericalToCartesian(this->radius, theta, phi);
 			glm::vec3 p1 = SphericalToCartesian(this->radius, theta1, phi);
 			glm::vec3 p2 = SphericalToCartesian(this->radius, theta1, phi1);
 			glm::vec3 p3 = SphericalToCartesian(this->radius, theta, phi1);
 
+			
+				
 			data.insert(data.end(), {
 					p0.x, p0.y, p0.z, material.color.r, material.color.g, material.color.b,
 					p1.x, p1.y, p1.z, material.color.r, material.color.g, material.color.b,
@@ -74,7 +83,7 @@ void Sphere::ConstructSphere() {
 
 		}
 	}
-	glBufferData(VBO, sizeof(float) * data.size(), data.data(), GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * data.size(), data.data(), GL_STATIC_DRAW);
 }
 
 Material::Material(glm::vec3 color, float roughness){

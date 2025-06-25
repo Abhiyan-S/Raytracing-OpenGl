@@ -62,12 +62,14 @@
     <None Include="Shaders\AccumShader.fs">
       <Filter>Resource Files\Shaders</Filter>
     </None>
-    <None Include="Shaders\DisplayShader.fs" />
-    <None Include="BasicRenderingVertexShader.vs">
+    <None Include="Shaders\BasicRenderingFragmentShader.fs">
       <Filter>Resource Files\Shaders</Filter>
     </None>
-    <None Include="BasicRenderingFragmentShader.fs">
-      <Filter>Resource Files</Filter>
+    <None Include="Shaders\BasicRenderingVertexShader.vs">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="TestVertex.vs">
+      <Filter>Resource Files\Shaders</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -78,6 +80,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GPUStructs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

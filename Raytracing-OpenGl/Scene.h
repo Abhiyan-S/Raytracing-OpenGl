@@ -16,6 +16,9 @@ public:
 	GLuint ssbo_objects;
 	GLuint ssbo_triangles;
 
+	std::vector<Sphere>* spheres;
+	std::vector<Light>* lights;
+
 	GLuint sceneFBO, sceneTex;
 	GLuint accumFBO[2], accumTex[2];
 
@@ -29,6 +32,8 @@ public:
 
 	//All of these functions send data to the GPU
 	//Avoid Calling these functions in program loop(exception UpdateCamera()) for now
+
+	//TODO: This class now stores the references to objects and light vectors, no need to pass them to these functions
 	void UpdateSpheres(const std::vector<Sphere>& spheres);
 	void UpdateCamera(Camera& camera);
 	void UpdateLights(const std::vector<Light>& lights);

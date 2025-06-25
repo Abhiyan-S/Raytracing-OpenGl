@@ -6,6 +6,7 @@
 #include "Scene.h"
 #include<glm/glm.hpp>
 #include<glm/gtc/matrix_transform.hpp>
+#include<glm/gtc/type_ptr.hpp>
 #include "Objects.h"
 #include<vector>
 #include<iostream>
@@ -21,7 +22,7 @@ int width = 800, height = 600;
 float dt=0;
 
 enum RenderMode {
-	RAYTRACING, NORMAL
+	RAYTRACING, BASIC
 };
 
 void CreateScreenQuad(GLuint *vao, GLuint *vbo) {
@@ -51,7 +52,7 @@ std::vector<Sphere> SetSpheres() {
 									Sphere(glm::vec3(0,1,0), 3),
 									Sphere(glm::vec3(6,0,0), 2),
 									Sphere(glm::vec3(10,0,0), 1),
-									Sphere(glm::vec3(0,20,0), 10)
+									Sphere(glm::vec3(0,20,0), 10),
 	};
 
 	spheres[0].material.roughness = 1;
@@ -104,7 +105,7 @@ void GenerateGUI() {
 }
 
 void RenderRaytracing(Scene &scene, GLuint &vao_quad, int bounces, int samples, int current, int next, int frameCount) {
-	glClearColor(0, 0, 0, 1);
+	glDisable(GL_DEPTH_TEST); // Does not work with this enabled
 	glBindFramebuffer(GL_FRAMEBUFFER, scene.sceneFBO);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -148,9 +149,31 @@ void RenderRaytracing(Scene &scene, GLuint &vao_quad, int bounces, int samples, 
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 }
 
-void RenderBasic() {
+void RenderBasic(Scene &scene, Camera &cam, Shader basicShader) {
+	basicShader.Use();
+	glEnable(GL_DEPTH_TEST);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glClearColor(0, 0, 0, 1);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+	glm::mat4 view = glm::lookAt(cam.position, cam.position+cam.dir, cam.up);
+	glUniformMatrix4fv(glGetUniformLocation(basicShader.ID, "view"), 1, GL_FALSE, glm::value_ptr(view));
+
+
+	//getting the vertical fov
+	float h = sqrt(cam.focalLength * cam.focalLength + (cam.screenWidth / 2) * (cam.screenWidth / 2));
+	float verticalFOV = atan(cam.screenHeight / (2 * h));
+	glm::mat4 proj = glm::perspective(verticalFOV, width / (float)height, 0.1f, 100.0f);
+	glUniformMatrix4fv(glGetUniformLocation(basicShader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(proj));
+
+	for (int i = 0; i < scene.spheres->size(); i++) {
+		glm::mat4 model(1.0);
+		model = glm::translate(model, (*scene.spheres)[i].position);
+		glUniformMatrix4fv(glGetUniformLocation(basicShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(model));
+		(*scene.spheres)[i].Render();
+	}
 }
+
 
 int main(int argc, char* argv[]) {
 	SDL_Init(SDL_INIT_VIDEO);
@@ -175,6 +198,8 @@ int main(int argc, char* argv[]) {
 	Shader accumShader("Shaders/QuadVertexShader.vs", "Shaders/AccumShader.fs");
 	Shader displayShader("Shaders/QuadVertexShader.vs", "Shaders/DisplayShader.fs");
 
+	Shader basicShader("Shaders/BasicRenderingVertexShader.vs", "Shaders/BasicRenderingFragmentShader.fs");
+
 	int resLoc = glGetUniformLocation(raytracingShader.ID, "resolution");
 
 	Camera camera(glm::vec3(5, 5, 15), glm::vec3(0, 0, -1), 60, 5, width / (float)height);
@@ -186,11 +211,12 @@ int main(int argc, char* argv[]) {
 	scene.UpdateCamera(camera);
 
 	std::vector<Sphere> spheres = SetSpheres();
+	scene.spheres = &spheres;
 
 	GLuint ssbo_lights;
 	std::vector<Light> lights = {
 									Light(glm::vec3(7,5,2), glm::vec3(1,1,1),0.5),
-									Light(glm::vec3(2,5,8), glm::vec3(0,0.4,0.3),0.25)
+									Light(glm::vec3(2,5,8), glm::vec3(1,1,1),1)
 								   };
 
 	std::vector<Object> objects = {
@@ -210,7 +236,7 @@ int main(int argc, char* argv[]) {
 
 	const Uint8* keystate = SDL_GetKeyboardState(NULL);
 	
-	RenderMode renderMode = RAYTRACING;
+	RenderMode renderMode = BASIC;
 
 	int bounces = 5;
 	int samples = 5;
@@ -222,6 +248,12 @@ int main(int argc, char* argv[]) {
 
 	ImGui_ImplSDL2_InitForOpenGL(window, context);
 	ImGui_ImplOpenGL3_Init("#version 430");
+
+	ResetTextures(scene.accumTex, &frameCount);
+
+	camera.position = glm::vec3(0, 0, 5);
+	camera.dir = glm::vec3(0, 0, -1);
+	camera.up = glm::vec3(0, 1, 0);
 
 	while (running) {
 		auto start = std::chrono::high_resolution_clock::now();
@@ -249,6 +281,7 @@ int main(int argc, char* argv[]) {
 		}
 		HandleCameraMovement(keystate, &camera);
 		scene.UpdateCamera(camera);
+
 		
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplSDL2_NewFrame();
@@ -256,23 +289,25 @@ int main(int argc, char* argv[]) {
 
 		ImGui::Begin("GUI:");
 		if (ImGui::Button("Toggle Raytracing")) {
-			if (renderMode == NORMAL) renderMode = RAYTRACING; else renderMode = NORMAL;
+			if (renderMode == BASIC) renderMode = RAYTRACING; else renderMode = BASIC;
 			
 		}
 		std::string fps_string = std::string("FPS: ") + std::to_string(1/dt);
+
 		ImGui::Text( fps_string.c_str());
 
 		ImGui::Text("Press LCTRL to toggle mouse lock");
 		ImGui::End();
 
-		ImGui::Render();
+		
 
-		glClear(GL_COLOR_BUFFER_BIT);
 		if (renderMode == RAYTRACING) {
 			RenderRaytracing(scene, vao_quad, bounces, samples, current, next, frameCount);
 		}
 		else {
-			RenderBasic();
+			RenderBasic(scene, camera, basicShader);
+			
+
 		}
 
 		std::swap(current, next);

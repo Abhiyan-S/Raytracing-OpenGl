@@ -37,6 +37,7 @@ public:
 	GLuint VAO, VBO;
 	Sphere(glm::vec3 pos, float r);
 	void ConstructSphere();
+	void Render();
 };
 
 class Light {
