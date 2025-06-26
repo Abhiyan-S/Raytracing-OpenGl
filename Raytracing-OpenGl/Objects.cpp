@@ -3,13 +3,14 @@
 #include "Shaders/Shader.h"
 #include<glm/gtc/matrix_transform.hpp>
 #include "GPUStructs.h"
+#include <iostream>
 
 #define PI 3.141592653
 #define SPHERE_RESOLUTION 10
 
 Camera::Camera(glm::vec3 position, glm::vec3 dir, float horizontalFOV, float focalLength, float aspectRatio) { // FOV in degrees
 	dir = glm::normalize(dir);
-	horizontalFOV = glm::radians(horizontalFOV);
+	horizontalFOV = glm::radians(horizontalFOV);//converting fov to radians
 
 	right = -glm::cross(dir, glm::vec3(0, 1, 0));// without - sign, the axes are flipped
 	up = glm::cross(dir, right);
@@ -84,6 +85,7 @@ void Sphere::ConstructSphere() {
 		}
 	}
 	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * data.size(), data.data(), GL_STATIC_DRAW);
+
 }
 
 Material::Material(glm::vec3 color, float roughness){

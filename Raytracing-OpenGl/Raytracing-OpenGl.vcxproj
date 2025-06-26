@@ -119,7 +119,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\Abhiyan\source\repos\Raytracing-OpenGl\Raytracing-OpenGl\glm;C:\Users\Abhiyan\source\repos\Raytracing-OpenGl\Raytracing-OpenGl\SDL2\include;C:\Users\Abhiyan\source\repos\Raytracing-OpenGl\Raytracing-OpenGl\glad\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\Abhiyan\source\repos\Raytracing-OpenGl\Raytracing-OpenGl\imgui;C:\Users\Abhiyan\source\repos\Raytracing-OpenGl\Raytracing-OpenGl\glm;C:\Users\Abhiyan\source\repos\Raytracing-OpenGl\Raytracing-OpenGl\SDL2\include;C:\Users\Abhiyan\source\repos\Raytracing-OpenGl\Raytracing-OpenGl\glad\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

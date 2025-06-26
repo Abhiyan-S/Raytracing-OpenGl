@@ -258,9 +258,12 @@ void main(){
 		ray.dir = normalize(pointInScreen - cam.position);
 	for(int bounce=0; bounce < BOUNCES; bounce++){
 		HitInfo hit = TracePath(ray);
+		float dirSign = sign(dot(-ray.dir, hit.normal)); //+1 if ray hits the side of normal, -1 if otherwise
+		vec3 correctNormal = hit.normal * dirSign; //normal according to the incoming ray
+
 		if(hit.didHit){
 			if(hit.material.emits) {acolor += hit.material.color * hit.material.emissionStrength;}
-			else { acolor += hit.material.color * GetLight(hit.point + hit.normal * 0.001, hit.normal) * hit.material.roughness;}
+			else { acolor += hit.material.color * GetLight(hit.point + correctNormal * 0.01, correctNormal) * hit.material.roughness;}
 			
 		}
 		else{
@@ -268,9 +271,9 @@ void main(){
 		}
 		ray.origin = hit.point;
 
-		vec3 diffuse = RandomVectorInHemisphere(hit.normal);
+		vec3 diffuse = RandomVectorInHemisphere(correctNormal);
 
-		vec3 specular = ray.dir - 2 * dot(ray.dir,hit.normal) * hit.normal;
+		vec3 specular = ray.dir - 2 * dot(ray.dir,correctNormal) *correctNormal;
 		ray.dir = normalize(mix(specular, diffuse, hit.material.roughness));
 	}
 	}

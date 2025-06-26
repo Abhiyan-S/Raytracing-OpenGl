@@ -48,16 +48,18 @@ void CreateScreenQuad(GLuint *vao, GLuint *vbo) {
 
 std::vector<Sphere> SetSpheres() {
 	std::vector<Sphere> spheres = {
-									Sphere(glm::vec3(0,-102,2), 100),
+									/*Sphere(glm::vec3(0,-102,2), 100),
 									Sphere(glm::vec3(0,1,0), 3),
 									Sphere(glm::vec3(6,0,0), 2),
 									Sphere(glm::vec3(10,0,0), 1),
-									Sphere(glm::vec3(0,20,0), 10),
+									Sphere(glm::vec3(0,20,0), 10),*/
+
+									Sphere(glm::vec3(0,0,0), 5)
 	};
 
-	spheres[0].material.roughness = 1;
-	spheres[0].material.color = glm::vec3(1, 1, 1);
-	spheres[1].material.emits = true;
+	/*spheres[0].material.roughness = 1;
+	spheres[0].material.color = glm::vec3(1, 1, 1);*/
+	/*spheres[1].material.emits = true;
 	spheres[1].material.emissionStrength = 4;
 	spheres[1].material.color = glm::vec3(0.8, 0.1, 1);
 	spheres[2].material.roughness = 0.1;
@@ -65,7 +67,7 @@ std::vector<Sphere> SetSpheres() {
 
 	spheres[3].material.emits = true;
 	spheres[3].material.emissionStrength = 4;
-	spheres[3].material.color = glm::vec3(0.1, 0.1, 1);
+	spheres[3].material.color = glm::vec3(0.1, 0.1, 1);*/
 
 	return spheres;
 }
@@ -103,7 +105,9 @@ void HandleMouseMotion(float dx, float dy, Camera *camera) {
 void GenerateGUI() {
 
 }
-
+void printVec(const glm::vec3& v, const std::string& name = "") {
+	std::cout << name << "vec3(" << v.x << ", " << v.y << ", " << v.z << ")\n";
+}
 void RenderRaytracing(Scene &scene, GLuint &vao_quad, int bounces, int samples, int current, int next, int frameCount) {
 	glDisable(GL_DEPTH_TEST); // Does not work with this enabled
 	glBindFramebuffer(GL_FRAMEBUFFER, scene.sceneFBO);
@@ -163,7 +167,7 @@ void RenderBasic(Scene &scene, Camera &cam, Shader basicShader) {
 	//getting the vertical fov
 	float h = sqrt(cam.focalLength * cam.focalLength + (cam.screenWidth / 2) * (cam.screenWidth / 2));
 	float verticalFOV = atan(cam.screenHeight / (2 * h));
-	glm::mat4 proj = glm::perspective(verticalFOV, width / (float)height, 0.1f, 100.0f);
+	glm::mat4 proj = glm::perspective(glm::radians(45.0f), width / (float)height, 0.1f, 100.0f);
 	glUniformMatrix4fv(glGetUniformLocation(basicShader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(proj));
 
 	for (int i = 0; i < scene.spheres->size(); i++) {
@@ -202,7 +206,7 @@ int main(int argc, char* argv[]) {
 
 	int resLoc = glGetUniformLocation(raytracingShader.ID, "resolution");
 
-	Camera camera(glm::vec3(5, 5, 15), glm::vec3(0, 0, -1), 60, 5, width / (float)height);
+	Camera camera(glm::vec3(0, 0, 0), glm::vec3(0, 0, -1), 60, 5, width / (float)height);
 	camera.speed = 10;
 	camera.sensitivity = 0.001;
 	camera.resolution = glm::vec2(width, height);
@@ -224,6 +228,9 @@ int main(int argc, char* argv[]) {
 	};
 	objects[0].AddTriangle(Triangle(glm::vec3(-10, 10, 0), glm::vec3(0, 10, 10), glm::vec3(10, 10, 10)));
 	objects[0].material.color = glm::vec3(1, 1, 1);
+	objects[0].material.roughness = 0.8;
+
+	std::cout << objects[0].triangles[0].normal.x << objects[0].triangles[0].normal.y << objects[0].triangles[0].normal.z << std::endl;
 
 	scene.UpdateSpheres(spheres);
 	scene.UpdateLights(lights);
@@ -243,6 +250,9 @@ int main(int argc, char* argv[]) {
 
 	bool mouseLocked = false;
 
+	glFrontFace(GL_CW); // instead of GL_CCW
+	glEnable(GL_CULL_FACE);
+
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 
@@ -250,10 +260,6 @@ int main(int argc, char* argv[]) {
 	ImGui_ImplOpenGL3_Init("#version 430");
 
 	ResetTextures(scene.accumTex, &frameCount);
-
-	camera.position = glm::vec3(0, 0, 5);
-	camera.dir = glm::vec3(0, 0, -1);
-	camera.up = glm::vec3(0, 1, 0);
 
 	while (running) {
 		auto start = std::chrono::high_resolution_clock::now();
@@ -298,8 +304,6 @@ int main(int argc, char* argv[]) {
 
 		ImGui::Text("Press LCTRL to toggle mouse lock");
 		ImGui::End();
-
-		
 
 		if (renderMode == RAYTRACING) {
 			RenderRaytracing(scene, vao_quad, bounces, samples, current, next, frameCount);
