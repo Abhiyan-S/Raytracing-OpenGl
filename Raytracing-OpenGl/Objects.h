@@ -38,6 +38,12 @@ public:
 	Sphere(glm::vec3 pos, float r);
 	void ConstructSphere();
 	void Render();
+	
+	// Disable copying
+	Sphere(const Sphere&) = delete;
+	Sphere& operator=(const Sphere&) = delete;
+	Sphere(Sphere&&) = default;
+	Sphere& operator=(Sphere&&) = default;
 };
 
 class Light {

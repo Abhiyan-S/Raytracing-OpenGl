@@ -16,8 +16,8 @@ public:
 	GLuint ssbo_objects;
 	GLuint ssbo_triangles;
 
-	std::vector<Sphere>* spheres;
-	std::vector<Light>* lights;
+	std::vector<Sphere> spheres;
+	std::vector<Light> lights;
 
 	GLuint sceneFBO, sceneTex;
 	GLuint accumFBO[2], accumTex[2];
@@ -40,4 +40,6 @@ public:
 	void UpdateObjects(const std::vector<Object>& objects);
 
 	void Delete(std::vector<Sphere> &spheres);
+
+
 };

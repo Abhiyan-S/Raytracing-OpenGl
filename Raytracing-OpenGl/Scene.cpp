@@ -80,8 +80,6 @@ void Scene::InitScene(int width, int height) {
 }
 
 Scene::Scene(int width, int height, Shader raytracingShader, Shader accumShader, Shader displayShader) : raytracingShader(raytracingShader), accumShader(accumShader), displayShader(displayShader) {
-	spheres = new std::vector<Sphere>;
-	lights = new std::vector<Light>();
 	InitScene(width, height);
 }
 

@@ -25,8 +25,8 @@ Sphere::Sphere(glm::vec3 pos, float r){
 	this->position = pos;
 	this->radius = r;
 	glGenVertexArrays(1, &VAO);
-	glBindVertexArray(VAO);
 	glGenBuffers(1, &VBO);
+	glBindVertexArray(VAO);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
 	ConstructSphere();
@@ -55,20 +55,17 @@ glm::vec3 SphericalToCartesian(float r, float t, float p) {
 void Sphere::ConstructSphere() {
 	std::vector<float> data;
 	float res = (float)SPHERE_RESOLUTION;
-	for (int i = 0; i < res; i++) {
+	for (int i = 0; i < SPHERE_RESOLUTION; i++) {
 		float theta = (i / res) * PI;
 		float theta1 = ((i + 1) / res) * PI;
-		for (int j = 0; j < res; j++) {
+		for (int j = 0; j < SPHERE_RESOLUTION; j++) {
 			float phi = (j / res) * 2 * PI;
 			float phi1 = ((j + 1) / res) * 2 * PI;
 
 			glm::vec3 p0 = SphericalToCartesian(this->radius, theta, phi);
 			glm::vec3 p1 = SphericalToCartesian(this->radius, theta1, phi);
 			glm::vec3 p2 = SphericalToCartesian(this->radius, theta1, phi1);
-			glm::vec3 p3 = SphericalToCartesian(this->radius, theta, phi1);
-
-			
-				
+			glm::vec3 p3 = SphericalToCartesian(this->radius, theta, phi1);	
 			data.insert(data.end(), {
 					p0.x, p0.y, p0.z, material.color.r, material.color.g, material.color.b,
 					p1.x, p1.y, p1.z, material.color.r, material.color.g, material.color.b,

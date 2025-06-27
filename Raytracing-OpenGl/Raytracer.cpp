@@ -47,27 +47,30 @@ void CreateScreenQuad(GLuint *vao, GLuint *vbo) {
 }
 
 std::vector<Sphere> SetSpheres() {
-	std::vector<Sphere> spheres = {
-									/*Sphere(glm::vec3(0,-102,2), 100),
-									Sphere(glm::vec3(0,1,0), 3),
-									Sphere(glm::vec3(6,0,0), 2),
-									Sphere(glm::vec3(10,0,0), 1),
-									Sphere(glm::vec3(0,20,0), 10),*/
+	std::vector<Sphere> spheres;
 
-									Sphere(glm::vec3(0,0,0), 5)
-	};
+	Sphere s1(glm::vec3(0, -102, 2), 100);
+	s1.material.roughness = 1.0f;
+	s1.material.color = glm::vec3(1, 1, 1);
 
-	/*spheres[0].material.roughness = 1;
-	spheres[0].material.color = glm::vec3(1, 1, 1);*/
-	/*spheres[1].material.emits = true;
-	spheres[1].material.emissionStrength = 4;
-	spheres[1].material.color = glm::vec3(0.8, 0.1, 1);
-	spheres[2].material.roughness = 0.1;
-	spheres[2].material.color = glm::vec3(1, 1, 0);
+	Sphere s2(glm::vec3(0, 1, 0), 3);
+	s2.material.emits = true;
+	s2.material.emissionStrength = 4.0f;
+	s2.material.color = glm::vec3(0.8f, 0.1f, 1.0f);
 
-	spheres[3].material.emits = true;
-	spheres[3].material.emissionStrength = 4;
-	spheres[3].material.color = glm::vec3(0.1, 0.1, 1);*/
+	Sphere s3(glm::vec3(6, 0, 0), 2);
+	s3.material.roughness = 0.1f;
+	s3.material.color = glm::vec3(1.0f, 1.0f, 0.0f);
+
+	Sphere s4(glm::vec3(10, 0, 0), 1);
+	s4.material.emits = true;
+	s4.material.emissionStrength = 4.0f;
+	s4.material.color = glm::vec3(0.1f, 0.1f, 1.0f);
+
+	spheres.push_back(std::move(s1));
+	spheres.push_back(std::move(s2));
+	spheres.push_back(std::move(s3));
+	spheres.push_back(std::move(s4));
 
 	return spheres;
 }
@@ -170,11 +173,11 @@ void RenderBasic(Scene &scene, Camera &cam, Shader basicShader) {
 	glm::mat4 proj = glm::perspective(glm::radians(45.0f), width / (float)height, 0.1f, 100.0f);
 	glUniformMatrix4fv(glGetUniformLocation(basicShader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(proj));
 
-	for (int i = 0; i < scene.spheres->size(); i++) {
+	for (Sphere &sphere : scene.spheres) {
 		glm::mat4 model(1.0);
-		model = glm::translate(model, (*scene.spheres)[i].position);
+		model = glm::translate(model, sphere.position);
 		glUniformMatrix4fv(glGetUniformLocation(basicShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(model));
-		(*scene.spheres)[i].Render();
+		sphere.Render();
 	}
 }
 
@@ -182,7 +185,7 @@ void RenderBasic(Scene &scene, Camera &cam, Shader basicShader) {
 int main(int argc, char* argv[]) {
 	SDL_Init(SDL_INIT_VIDEO);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 4);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
 
 
 	SDL_Window* window = SDL_CreateWindow("Window", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_OPENGL);
@@ -212,10 +215,9 @@ int main(int argc, char* argv[]) {
 	camera.resolution = glm::vec2(width, height);
 
 	Scene scene(width, height, raytracingShader, accumShader, displayShader);
-	scene.UpdateCamera(camera);
+	
 
-	std::vector<Sphere> spheres = SetSpheres();
-	scene.spheres = &spheres;
+	scene.spheres = std::move(SetSpheres());
 
 	GLuint ssbo_lights;
 	std::vector<Light> lights = {
@@ -232,7 +234,7 @@ int main(int argc, char* argv[]) {
 
 	std::cout << objects[0].triangles[0].normal.x << objects[0].triangles[0].normal.y << objects[0].triangles[0].normal.z << std::endl;
 
-	scene.UpdateSpheres(spheres);
+	scene.UpdateSpheres(scene.spheres);
 	scene.UpdateLights(lights);
 	scene.UpdateObjects(objects);
 
@@ -260,6 +262,10 @@ int main(int argc, char* argv[]) {
 	ImGui_ImplOpenGL3_Init("#version 430");
 
 	ResetTextures(scene.accumTex, &frameCount);
+
+	camera.position = glm::vec3(0, 0, -3);
+	camera.dir = glm::vec3(0, 0, 1);
+	scene.UpdateCamera(camera);
 
 	while (running) {
 		auto start = std::chrono::high_resolution_clock::now();
@@ -325,7 +331,7 @@ int main(int argc, char* argv[]) {
 		dt = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count()/1000000.0;
 		time += dt;
 	}
-	scene.Delete(spheres);
+	scene.Delete(scene.spheres);
 	SDL_DestroyWindow(window);
 	SDL_GL_DeleteContext(context);
 	SDL_Quit();
