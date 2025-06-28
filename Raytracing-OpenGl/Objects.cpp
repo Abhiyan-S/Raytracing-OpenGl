@@ -6,7 +6,7 @@
 #include <iostream>
 
 #define PI 3.141592653
-#define SPHERE_RESOLUTION 10
+#define SPHERE_RESOLUTION 30
 
 Camera::Camera(glm::vec3 position, glm::vec3 dir, float horizontalFOV, float focalLength, float aspectRatio) { // FOV in degrees
 	dir = glm::normalize(dir);

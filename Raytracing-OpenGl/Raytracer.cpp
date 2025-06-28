@@ -281,7 +281,7 @@ int main(int argc, char* argv[]) {
 				if (event.key.keysym.sym == SDLK_DOWN) { bounces -= 1; std::cout << "Bounces set to " << bounces << "\n"; }
 
 				if(event.key.keysym.sym == SDLK_LCTRL) SDL_SetRelativeMouseMode((mouseLocked = !mouseLocked)? SDL_TRUE:SDL_FALSE);
-				ResetTextures(scene.accumTex, &frameCount);
+				if(renderMode == RAYTRACING) ResetTextures(scene.accumTex, &frameCount);
 			}
 			if (event.type == SDL_MOUSEMOTION) {
 				HandleMouseMotion(event.motion.xrel, event.motion.yrel, &camera);
