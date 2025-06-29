@@ -37,6 +37,7 @@ Sphere::Sphere(glm::vec3 pos, float r){
 	glEnableVertexAttribArray(0);
 	glEnableVertexAttribArray(1);
 	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 void Sphere::Render() {
