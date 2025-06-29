@@ -67,6 +67,11 @@ std::vector<Sphere> SetSpheres() {
 	s4.material.emissionStrength = 4.0f;
 	s4.material.color = glm::vec3(0.1f, 0.1f, 1.0f);
 
+	s1.ConstructSphere();
+	s2.ConstructSphere();
+	s3.ConstructSphere();
+	s4.ConstructSphere();
+
 	spheres.push_back(std::move(s1));
 	spheres.push_back(std::move(s2));
 	spheres.push_back(std::move(s3));
@@ -166,11 +171,11 @@ void RenderBasic(Scene &scene, Camera &cam, Shader basicShader) {
 	glm::mat4 view = glm::lookAt(cam.position, cam.position+cam.dir, cam.up);
 	glUniformMatrix4fv(glGetUniformLocation(basicShader.ID, "view"), 1, GL_FALSE, glm::value_ptr(view));
 
-
 	//getting the vertical fov
 	float h = sqrt(cam.focalLength * cam.focalLength + (cam.screenWidth / 2) * (cam.screenWidth / 2));
 	float verticalFOV = atan(cam.screenHeight / (2 * h));
-	glm::mat4 proj = glm::perspective(glm::radians(45.0f), width / (float)height, 0.1f, 100.0f);
+
+	glm::mat4 proj = glm::perspective(verticalFOV, width / (float)height, 0.1f, 100.0f);
 	glUniformMatrix4fv(glGetUniformLocation(basicShader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(proj));
 
 	for (Sphere &sphere : scene.spheres) {
@@ -180,7 +185,6 @@ void RenderBasic(Scene &scene, Camera &cam, Shader basicShader) {
 		sphere.Render();
 	}
 }
-
 
 int main(int argc, char* argv[]) {
 	SDL_Init(SDL_INIT_VIDEO);
@@ -252,8 +256,6 @@ int main(int argc, char* argv[]) {
 
 	bool mouseLocked = false;
 
-	glFrontFace(GL_CW); // instead of GL_CCW
-	glEnable(GL_CULL_FACE);
 
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
@@ -264,7 +266,7 @@ int main(int argc, char* argv[]) {
 	ResetTextures(scene.accumTex, &frameCount);
 
 	camera.position = glm::vec3(0, 0, -3);
-	camera.dir = glm::vec3(0, 0, 1);
+	camera.dir = glm::vec3(0, 0, -1);
 	scene.UpdateCamera(camera);
 
 	while (running) {
@@ -316,7 +318,6 @@ int main(int argc, char* argv[]) {
 		}
 		else {
 			RenderBasic(scene, camera, basicShader);
-			
 
 		}
 
